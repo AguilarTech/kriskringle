@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dev-dist/
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+
+# Supabase local
+**/supabase/.branches/
+**/supabase/.temp/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Private planning and agent notes
+/AGENTS.md
+/CLAUDE.md
+/docs/01-prd.md
+/docs/04-roadmap.md
+/docs/05-agent-workplan.md
+/docs/reviews/
+/docs/runbook.md
