@@ -13,6 +13,7 @@ const items = [{ id: 'home', label: 'Home' }, { id: 'chats', label: 'Chats' }, {
       :key="item.id"
       type="button"
       :aria-current="active === item.id ? 'page' : undefined"
+      :aria-label="item.id === 'chats' && unread ? 'Chats, new messages' : item.label"
       @click="emit('select', item.id)"
     >
       <span

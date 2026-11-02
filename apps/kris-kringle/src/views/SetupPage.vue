@@ -116,6 +116,7 @@ onMounted(() => { void load() })
   <PostDrawPage
     v-else
     :phase="phase"
+    :user-id="userId"
     @sign-out="signOut"
   />
 </template>

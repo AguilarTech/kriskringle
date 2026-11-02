@@ -1,18 +1,19 @@
 ﻿<script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import AppButton from '../components/AppButton.vue'
 
 type Message = { id: string; body: string; direction: string; created_at: string }
 const props = defineProps<{ direction: 'to_flavour' | 'to_santa'; flavourName: string; heroHex: string; inkHex: string; closed: boolean }>()
-const emit = defineEmits<{ back: [] }>()
+const emit = defineEmits<{ back: []; read: [direction: 'to_flavour' | 'to_santa', timestamp: string] }>()
 const messages = ref<Message[]>([])
 const text = ref('')
 const loading = ref(true)
 const sending = ref(false)
 const error = ref('')
 const serverQuota = ref(false)
+let mounted = false
 function melbourneWeek(value: Date) {
   const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Melbourne', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(value)
   const get = (name: string) => Number(parts.find(part => part.type === name)?.value)
@@ -28,6 +29,11 @@ async function load() {
     const result = props.direction === 'to_flavour' ? await supabase.rpc('chat_with_flavour') : await supabase.rpc('chat_with_santa')
     if (result.error) throw result.error
     messages.value = result.data
+    loading.value = false
+    const received = result.data.filter(message => message.direction !== props.direction)
+    const latest = received.reduce((max, message) => (!max || Date.parse(message.created_at) > Date.parse(max)) ? message.created_at : max, '')
+    await nextTick()
+    if (latest && mounted && document.visibilityState === 'visible') emit('read', props.direction, latest)
   } catch { error.value = "Couldn't load this chat. Please try again." } finally { loading.value = false }
 }
 async function send() {
@@ -44,7 +50,9 @@ async function send() {
     await load()
   } catch { error.value = "Couldn't send. Please try again." } finally { sending.value = false }
 }
-onMounted(() => { void load() })
+function onVisibility() { if (document.visibilityState === 'visible') void load() }
+onMounted(() => { mounted = true; document.addEventListener('visibilitychange', onVisibility); void load() })
+onUnmounted(() => { mounted = false; document.removeEventListener('visibilitychange', onVisibility) })
 </script>
 <template>
   <section
