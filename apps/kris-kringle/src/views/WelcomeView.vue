@@ -21,7 +21,7 @@ const emit = defineEmits<{ signIn: [] }>()
       Continue with Google
     </AppButton>
     <p class="helper">
-      {{ available ? 'Only invited family email addresses are permitted.' : 'Sign-in is unavailable. Please check the app configuration.' }}
+      {{ available ? 'Sign in, then pick your name from the family list.' : 'Sign-in is unavailable. Please check the app configuration.' }}
     </p>
   </section>
 </template>

@@ -5,12 +5,13 @@ delete from public.santa;
 delete from public.flavour_owner;
 delete from public.members;
 update public.app_state set phase = 'setup' where id = 1;
-insert into public.allowlist (email) values
-    ('reads.a@example.test'), ('reads.b@example.test'), ('reads.c@example.test');
 insert into auth.users (id, email, email_confirmed_at) values
     ('ae000000-0000-4000-8000-000000000001', 'reads.a@example.test', now()),
     ('ae000000-0000-4000-8000-000000000002', 'reads.b@example.test', now()),
     ('ae000000-0000-4000-8000-000000000003', 'reads.c@example.test', now());
+insert into public.members (id, email, display_name)
+select id, email, split_part(email, '@', 1) from auth.users
+where id in ('ae000000-0000-4000-8000-000000000001', 'ae000000-0000-4000-8000-000000000002', 'ae000000-0000-4000-8000-000000000003');
 insert into public.answers (member_id, question_id, answer_text) values
     ('ae000000-0000-4000-8000-000000000001', 1, 'A private hint'),
     ('ae000000-0000-4000-8000-000000000002', 1, 'B recipient hint'),

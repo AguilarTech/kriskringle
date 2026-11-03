@@ -33,6 +33,8 @@ select results_eq(
         and has_function_privilege('authenticated', p.oid, 'EXECUTE')
         and p.oid <> all(array[
             'public.claim_membership()'::regprocedure::oid,
+            'public.list_roster()'::regprocedure::oid,
+            'public.claim_roster_name(uuid)'::regprocedure::oid,
             'public.my_flavour()'::regprocedure::oid,
             'public.my_flavour_survey()'::regprocedure::oid,
             'public.chat_with_flavour()'::regprocedure::oid,
@@ -42,25 +44,25 @@ select results_eq(
     $$select null::text where false$$,
     'authenticated can execute only the reviewed public RPC allowlist');
 
-insert into public.allowlist (email) values ('mises.unconfirmed@example.test');
+update public.app_state set phase = 'setup' where id = 1;
+insert into public.roster (id, name) values ('ba000000-0000-4000-8000-000000000006', 'Unconfirmed Santa');
 insert into auth.users (id, email, raw_user_meta_data)
 values ('ab000000-0000-4000-8000-000000000006', 'mises.unconfirmed@example.test',
         '{"full_name":"Unconfirmed Santa","email_verified":true}');
-select is((select count(*) from public.members where id = 'ab000000-0000-4000-8000-000000000006'),
-    0::bigint, 'trigger refuses an allowlisted but unconfirmed email, regardless of metadata');
 
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"ab000000-0000-4000-8000-000000000006","role":"authenticated"}';
-select is(public.claim_membership(), false, 'unconfirmed caller cannot claim membership');
-select is((select count(*) from public.members where id = auth.uid()),
-    0::bigint, 'failed unconfirmed claim creates no member row');
+select throws_ok($$select public.claim_roster_name('ba000000-0000-4000-8000-000000000006')$$,
+    'P0001', 'not_confirmed', 'unconfirmed caller cannot claim, regardless of metadata');
+select is(public.claim_membership(), false, 'failed unconfirmed claim creates no membership');
 reset role;
 
 -- Confirmation after first sign-in must recover through the normal claim RPC.
 update auth.users set email_confirmed_at = now()
 where id = 'ab000000-0000-4000-8000-000000000006';
 set local role authenticated;
-select is(public.claim_membership(), true, 'confirmed user can claim without another Auth insert');
+select is(public.claim_roster_name('ba000000-0000-4000-8000-000000000006'), true,
+    'confirmed user can claim without another Auth insert');
 select is((select email from public.members where id = auth.uid()),
     'mises.unconfirmed@example.test', 'confirmed claim creates the intended member');
 reset role;

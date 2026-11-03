@@ -2,7 +2,7 @@
 import { onMounted } from 'vue'
 import { useAuthStore } from './stores/auth'
 import WelcomeView from './views/WelcomeView.vue'
-import NotInvitedView from './views/NotInvitedView.vue'
+import ChooseNameView from './views/ChooseNameView.vue'
 import AppButton from './components/AppButton.vue'
 import SetupPage from './views/SetupPage.vue'
 
@@ -17,9 +17,9 @@ onMounted(() => { void auth.initialize() })
       :available="auth.status === 'signed-out'"
       @sign-in="auth.signIn()"
     />
-    <NotInvitedView
-      v-else-if="auth.status === 'not-invited'"
-      :email="auth.email"
+    <ChooseNameView
+      v-else-if="auth.status === 'choose-name'"
+      @claimed="auth.retry()"
       @sign-out="auth.signOut()"
     />
     <section
@@ -27,7 +27,7 @@ onMounted(() => { void auth.initialize() })
       class="welcome"
     >
       <h1>Couldn't connect</h1>
-      <p>We couldn't check your invitation. Please try again.</p>
+      <p>We couldn't check your account. Please try again.</p>
       <AppButton @click="auth.retry()">
         Try again
       </AppButton>
@@ -49,7 +49,7 @@ onMounted(() => { void auth.initialize() })
       class="welcome"
       role="status"
     >
-      <p>Checking your invitation...</p>
+      <p>Checking your account...</p>
     </section>
   </main>
 </template>

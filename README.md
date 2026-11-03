@@ -41,4 +41,16 @@ VAPID keys in Supabase Edge Function secrets. Supabase migrations and functions
 are deployed separately. Set the Supabase Auth site/redirect URLs to the deployed
 frontend address before testing Google sign-in.
 
+## Family list
+
+Players sign in with Google and then pick their own name from a list; each name
+can be claimed once. Add the names in the Supabase SQL editor:
+
+```sql
+insert into public.roster (name) values ('Abuela'), ('Tío Pepe');
+```
+
+If someone picks the wrong name, delete their row from `public.members` (this
+also removes their survey answers and exclusions) and the name becomes free.
+
 The [design](docs/02-design.md), [technical specification](docs/03-tech-spec.md), and [backend contracts](docs/contracts/) describe the intended interfaces. They are working documents; consult the implementation and migrations for current behavior.

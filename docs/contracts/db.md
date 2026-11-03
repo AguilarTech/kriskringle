@@ -2,7 +2,47 @@
 
 Owner: Mises. Source: `docs/03-tech-spec.md` sections 2–4 and 5.8.
 
-## Sprint 0: membership (v1)
+## Name roster (replaces the email allowlist)
+
+Implementation: `20261103060000_name_roster.sql`. This supersedes the
+allowlist, trigger and `sync_member` parts of the Sprint 0 section below,
+which is kept as history.
+
+The organiser adds family names to `public.roster` (service role or SQL
+editor). Anyone who signs in with Google picks their name from that list.
+
+### Sign-in flow
+
+1. Sign in with Supabase Google OAuth.
+2. Call `supabase.rpc('claim_membership')`. It returns `true` if the caller
+   already has a `members` row. An RPC error is retryable.
+3. If `false`, call `supabase.rpc('list_roster')` and show the names. It
+   returns `id`, `name` and `claimed boolean` only; it never reveals which
+   account claimed a name.
+4. Call `supabase.rpc('claim_roster_name', { p_roster_id })`. It creates the
+   member row (display name = roster name) and marks the name claimed, in one
+   transaction with the roster row locked. Errors use SQLSTATE `P0001` with
+   the message `name_taken`, `already_claimed`, `not_found`, `not_confirmed`
+   or `draw_done` (claims are only allowed while `app_state.phase = 'setup'`).
+   Claiming your own name again returns `true`.
+
+`roster.claimed_by` is unique and references `members.id` with
+`on delete set null`. To fix a wrong pick, the organiser deletes that
+`members` row (this also deletes that person's answers and exclusions), which
+frees the name. `members.email` is now nullable and is informational only.
+`roster` has RLS enabled and no client privileges.
+
+Existing members at migration time get a claimed roster entry for their
+display name; a member whose name duplicates another (case-insensitive) keeps
+their membership without a roster entry.
+
+Add names, for example:
+
+```sql
+insert into public.roster (name) values ('Abuela'), ('Tío Pepe');
+```
+
+## Sprint 0: membership (v1, superseded by the name roster)
 
 Implementation: `20261103000000_auth_membership.sql` and the incremental R1 fix
 `20261103010000_auth_r1_hardening.sql`. Both migrations and the seed

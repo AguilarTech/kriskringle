@@ -6,12 +6,13 @@ delete from public.santa;
 delete from public.flavour_owner;
 delete from public.members;
 update public.app_state set phase = 'setup' where id = 1;
-insert into public.allowlist (email) values
-    ('chat.a@example.test'), ('chat.b@example.test'), ('chat.c@example.test');
 insert into auth.users (id, email, email_confirmed_at) values
     ('af000000-0000-4000-8000-000000000001', 'chat.a@example.test', now()),
     ('af000000-0000-4000-8000-000000000002', 'chat.b@example.test', now()),
     ('af000000-0000-4000-8000-000000000003', 'chat.c@example.test', now());
+insert into public.members (id, email, display_name)
+select id, email, split_part(email, '@', 1) from auth.users
+where id in ('af000000-0000-4000-8000-000000000001', 'af000000-0000-4000-8000-000000000002', 'af000000-0000-4000-8000-000000000003');
 create temporary table chat_sent (label text primary key, id uuid);
 grant all on chat_sent to service_role;
 grant select on chat_sent to authenticated;

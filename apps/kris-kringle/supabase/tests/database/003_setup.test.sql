@@ -2,10 +2,12 @@ begin;
 set local search_path = public, extensions;
 select no_plan();
 
-insert into public.allowlist (email) values ('setup.a@example.test'), ('setup.b@example.test');
 insert into auth.users (id, email, email_confirmed_at) values
     ('ac000000-0000-4000-8000-000000000001', 'setup.a@example.test', now()),
     ('ac000000-0000-4000-8000-000000000002', 'setup.b@example.test', now());
+insert into public.members (id, email, display_name)
+select id, email, split_part(email, '@', 1) from auth.users
+where id in ('ac000000-0000-4000-8000-000000000001', 'ac000000-0000-4000-8000-000000000002');
 update public.app_state set phase = 'setup' where id = 1;
 insert into public.answers (member_id, question_id, answer_text)
 values ('ac000000-0000-4000-8000-000000000002', 1, 'B private answer');
