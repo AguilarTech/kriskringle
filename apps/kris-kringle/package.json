@@ -8,7 +8,7 @@
     "build": "vue-tsc --noEmit && vite build",
     "typecheck": "vue-tsc --noEmit",
     "lint": "eslint .",
-    "admin": "node --env-file=.env.admin scripts/admin.mjs"
+    "admin": "node --env-file=.env scripts/admin.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.0.0",

@@ -1,23 +1,24 @@
-// Organiser tools. Run from apps/kris-kringle with the service-role key in .env.admin:
+// Organiser tools. Run from apps/kris-kringle; settings come from .env:
 //
 //   npm run admin -- status          who has signed up and finished the questions
 //   npm run admin -- draw --dry-run  check the draw would work, without saving it
 //   npm run admin -- draw            run the draw for real (notifies everyone)
 //   npm run admin -- reset           wipe all players, answers, the draw and chats
 //
-// .env.admin (gitignored) needs:
-//   SUPABASE_URL=https://<project-ref>.supabase.co
-//   SUPABASE_SERVICE_ROLE_KEY=<the service_role key, never put it in the frontend>
+// .env (gitignored) needs, next to the app's existing VITE_SUPABASE_URL:
+//   SUPABASE_SERVICE_ROLE_KEY=<the service_role key>
+// Never prefix it with VITE_ or add it to Cloudflare's build variables:
+// anything named VITE_* is published inside the website.
 //
 // Nothing here ever reads or prints who has whose flavour.
 
 import { createInterface } from 'node:readline/promises'
 import { createClient } from '@supabase/supabase-js'
 
-const url = process.env.SUPABASE_URL
+const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY
 if (!url || !key) {
-  console.error('Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.admin (see scripts/admin.mjs).')
+  console.error('Add SUPABASE_SERVICE_ROLE_KEY (and VITE_SUPABASE_URL) to .env (see scripts/admin.mjs).')
   process.exit(1)
 }
 const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } })
