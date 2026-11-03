@@ -94,7 +94,7 @@ onUnmounted(() => { refreshVersion++; document.title = 'Kris Kringle'; document.
     <FlavourHome
       v-if="page === 'home'"
       :flavour="flavour"
-      christmas-at="2026-12-24T13:00:00Z"
+      christmas-at="2026-12-11T13:00:00Z"
       :answers="answers"
       :unread-flavour="unreadFlavour"
       :unread-santa="unreadSanta"
