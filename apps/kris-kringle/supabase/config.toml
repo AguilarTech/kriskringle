@@ -1,4 +1,4 @@
-# Local configuration for the pinned Supabase CLI 2.75.0.
+# Local configuration for the pinned Supabase CLI.
 # Production OAuth URLs/providers are configured separately in the dashboard.
 project_id = "kris-kringle"
 
@@ -28,7 +28,7 @@ enabled = true
 port = 54323
 api_url = "http://127.0.0.1"
 
-[inbucket]
+[local_smtp]
 enabled = false
 
 [storage]
