@@ -10,7 +10,7 @@ const emit = defineEmits<{ signIn: [] }>()
     <p class="eyebrow">
       A family Christmas tradition
     </p>
-    <h1>Paleta<br>Kris Kringle <span>2026</span></h1>
+    <h1>Kris<br>Kringle <span>2026</span></h1>
     <p class="tagline">
       Double-blind. Zero spoilers. 100% paletas.
     </p>
@@ -20,8 +20,11 @@ const emit = defineEmits<{ signIn: [] }>()
     >
       Continue with Google
     </AppButton>
-    <p class="helper">
-      {{ available ? 'Sign in, then pick your name from the family list.' : 'Sign-in is unavailable. Please check the app configuration.' }}
+    <p
+      v-if="!available"
+      class="helper"
+    >
+      Sign-in is unavailable. Please check the app configuration.
     </p>
   </section>
 </template>

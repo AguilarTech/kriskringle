@@ -10,4 +10,5 @@ export default [
   ...vue.configs['flat/recommended'],
   { files: ['**/*.vue'], languageOptions: { parserOptions: { parser: tseslint.parser } } },
   { languageOptions: { globals: globals.browser } },
+  { files: ['scripts/**'], languageOptions: { globals: globals.node } },
 ]

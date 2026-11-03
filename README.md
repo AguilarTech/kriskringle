@@ -1,4 +1,4 @@
-﻿# Paleta Kris Kringle
+﻿# Kris Kringle
 
 A mobile-friendly, double-blind gift exchange app. Each participant shops for a paleta flavour without knowing its owner, and can exchange anonymous messages with their recipient and their own Santa.
 
@@ -52,5 +52,30 @@ insert into public.roster (name) values ('Abuela'), ('Tío Pepe');
 
 If someone picks the wrong name, delete their row from `public.members` (this
 also removes their survey answers and exclusions) and the name becomes free.
+
+## Organiser tools
+
+The draw is **not** automatic. `app_state.draw_at` only drives the countdown;
+the organiser runs the draw by hand. From `apps/kris-kringle`, create a
+gitignored `.env.admin` with the project's legacy `service_role` key (Project
+Settings → API Keys):
+
+```sh
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<service_role key>
+```
+
+Then:
+
+```sh
+npm run admin -- status          # who has signed up and answered every question
+npm run admin -- draw --dry-run  # check a valid draw exists; saves nothing
+npm run admin -- draw            # run the draw and notify everyone
+npm run admin -- reset           # delete all players, answers, the draw and chats
+```
+
+`reset` keeps the name list, questions and countdown date, and asks you to type
+`reset` first. None of these commands reveal who has whose flavour. The draw
+supports 2 to 13 players.
 
 The [design](docs/02-design.md), [technical specification](docs/03-tech-spec.md), and [backend contracts](docs/contracts/) describe the intended interfaces. They are working documents; consult the implementation and migrations for current behavior.

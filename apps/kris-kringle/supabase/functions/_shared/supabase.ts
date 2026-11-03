@@ -46,7 +46,7 @@ export async function requireMember(
     .eq("id", userData.user.id)
     .maybeSingle();
   if (error) throw new Error("members lookup failed");
-  if (!member) throw new HttpError(403, "Not invited");
+  if (!member) throw new HttpError(403, "Not a member");
 
   return { userId: member.id, displayName: member.display_name, isAdmin: member.is_admin };
 }

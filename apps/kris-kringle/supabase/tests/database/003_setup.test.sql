@@ -15,7 +15,7 @@ insert into public.exclusions (member_id, excluded_id)
 values ('ac000000-0000-4000-8000-000000000002', 'ac000000-0000-4000-8000-000000000001');
 
 select is((select draw_at from public.app_state where id = 1),
-    '2026-12-05 20:00:00 Australia/Melbourne'::timestamptz, 'draw time is seeded in Melbourne time');
+    '2026-11-17 20:00:00 Australia/Melbourne'::timestamptz, 'draw time is seeded in Melbourne time');
 select ok((select bool_and(relrowsecurity) from pg_class where oid in (
     'public.app_state'::regclass, 'public.questions'::regclass,
     'public.answers'::regclass, 'public.exclusions'::regclass)), 'setup tables have RLS');

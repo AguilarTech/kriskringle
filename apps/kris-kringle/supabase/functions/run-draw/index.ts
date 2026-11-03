@@ -50,7 +50,7 @@ Deno.serve(handler(async (req) => {
     await notifyPush({
       broadcast: true,
       title: "The draw is done!",
-      body: "Open the app to see your Paleta flavour.",
+      body: "Open Kris Kringle to see your flavour.",
     });
   }
   return json(result);
