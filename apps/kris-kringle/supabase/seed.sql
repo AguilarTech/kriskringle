@@ -1,11 +1,11 @@
--- LOCAL fixtures only. Production family emails are loaded through the runbook.
+-- LOCAL fixtures only. Production family names are loaded through the runbook.
 -- No passwords, Auth users or admin memberships are seeded here.
-insert into public.allowlist (email)
+insert into public.roster (name)
 values
-    ('santa.one@example.test'),
-    ('santa.two@example.test'),
-    ('santa.three@example.test')
-on conflict (email) do nothing;
+    ('Santa One'),
+    ('Santa Two'),
+    ('Santa Three')
+on conflict do nothing;
 
 -- Local development key only. Production key creation is the organiser's task.
 select vault.create_secret(

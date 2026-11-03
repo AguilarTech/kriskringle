@@ -10,18 +10,20 @@ const emit = defineEmits<{ signIn: [] }>()
     <p class="eyebrow">
       A family Christmas tradition
     </p>
-    <h1>Paleta<br>Kris Kringle <span>2026</span></h1>
-    <p class="tagline">
-      Double-blind. Zero spoilers. 100% paletas.
-    </p>
+    <h1 class="welcome-title">
+      Kris<br>Kringle <span>2026</span>
+    </h1>
     <AppButton
       :disabled="!available"
       @click="emit('signIn')"
     >
       Continue with Google
     </AppButton>
-    <p class="helper">
-      {{ available ? 'Only invited family email addresses are permitted.' : 'Sign-in is unavailable. Please check the app configuration.' }}
+    <p
+      v-if="!available"
+      class="helper"
+    >
+      Sign-in is unavailable. Please check the app configuration.
     </p>
   </section>
 </template>

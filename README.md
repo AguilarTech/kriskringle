@@ -1,4 +1,4 @@
-﻿# Paleta Kris Kringle
+﻿# Kris Kringle
 
 A mobile-friendly, double-blind gift exchange app. Each participant shops for a paleta flavour without knowing its owner, and can exchange anonymous messages with their recipient and their own Santa.
 
@@ -14,7 +14,7 @@ npm install
 npm run dev
 ```
 
-Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in a local `.env` file. Never put service-role keys, OAuth secrets, or other private keys in frontend environment variables or commit them. Google sign-in requires a configured Google OAuth client and Supabase Auth provider.
+Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in a local `.env` file. Never give a private key (service-role key, OAuth secret) a `VITE_` name, put it in Cloudflare build variables, or commit it. The organiser script reads `SUPABASE_SERVICE_ROLE_KEY` from the same `.env` (see Organiser tools). Google sign-in requires a configured Google OAuth client and Supabase Auth provider.
 
 Useful commands: `npm run build`, `npm run typecheck`, and `npm run lint`. Run the local Supabase stack with `npx supabase start` and its database tests with `npx supabase test db`.
 
@@ -40,5 +40,45 @@ ignored `.env` is not available to Cloudflare builds. Keep Anthropic and private
 VAPID keys in Supabase Edge Function secrets. Supabase migrations and functions
 are deployed separately. Set the Supabase Auth site/redirect URLs to the deployed
 frontend address before testing Google sign-in.
+
+## Family list
+
+Players sign in with Google and then pick their own name from a list; each name
+can be claimed once. Add the names in the Supabase SQL editor:
+
+```sql
+insert into public.roster (name) values ('Abuela'), ('Tío Pepe');
+```
+
+If someone picks the wrong name, delete their row from `public.members` (this
+also removes their survey answers and exclusions) and the name becomes free.
+
+## Organiser tools
+
+The draw is **not** automatic. `app_state.draw_at` only drives the countdown;
+the organiser runs the draw by hand. Add the project's legacy `service_role`
+key (Project Settings → API Keys) to the gitignored `apps/kris-kringle/.env`,
+next to the existing `VITE_SUPABASE_URL`:
+
+```sh
+SUPABASE_SERVICE_ROLE_KEY=<service_role key>
+```
+
+Never prefix it with `VITE_` or add it to Cloudflare's build variables: any
+`VITE_*` value is published inside the website, and this key can read and
+delete everything.
+
+Then:
+
+```sh
+npm run admin -- status          # who has signed up and answered every question
+npm run admin -- draw --dry-run  # check a valid draw exists; saves nothing
+npm run admin -- draw            # run the draw and notify everyone
+npm run admin -- reset           # delete all players, answers, the draw and chats
+```
+
+`reset` keeps the name list, questions and countdown date, and asks you to type
+`reset` first. None of these commands reveal who has whose flavour. The draw
+supports 2 to 13 players.
 
 The [design](docs/02-design.md), [technical specification](docs/03-tech-spec.md), and [backend contracts](docs/contracts/) describe the intended interfaces. They are working documents; consult the implementation and migrations for current behavior.

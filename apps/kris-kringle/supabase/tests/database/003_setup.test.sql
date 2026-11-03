@@ -2,10 +2,12 @@ begin;
 set local search_path = public, extensions;
 select no_plan();
 
-insert into public.allowlist (email) values ('setup.a@example.test'), ('setup.b@example.test');
 insert into auth.users (id, email, email_confirmed_at) values
     ('ac000000-0000-4000-8000-000000000001', 'setup.a@example.test', now()),
     ('ac000000-0000-4000-8000-000000000002', 'setup.b@example.test', now());
+insert into public.members (id, email, display_name)
+select id, email, split_part(email, '@', 1) from auth.users
+where id in ('ac000000-0000-4000-8000-000000000001', 'ac000000-0000-4000-8000-000000000002');
 update public.app_state set phase = 'setup' where id = 1;
 insert into public.answers (member_id, question_id, answer_text)
 values ('ac000000-0000-4000-8000-000000000002', 1, 'B private answer');
@@ -13,7 +15,7 @@ insert into public.exclusions (member_id, excluded_id)
 values ('ac000000-0000-4000-8000-000000000002', 'ac000000-0000-4000-8000-000000000001');
 
 select is((select draw_at from public.app_state where id = 1),
-    '2026-12-05 20:00:00 Australia/Melbourne'::timestamptz, 'draw time is seeded in Melbourne time');
+    '2026-11-17 20:00:00 Australia/Melbourne'::timestamptz, 'draw time is seeded in Melbourne time');
 select ok((select bool_and(relrowsecurity) from pg_class where oid in (
     'public.app_state'::regclass, 'public.questions'::regclass,
     'public.answers'::regclass, 'public.exclusions'::regclass)), 'setup tables have RLS');

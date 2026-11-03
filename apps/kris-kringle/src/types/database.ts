@@ -9,21 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      allowlist: {
-        Row: {
-          created_at: string
-          email: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-        }
-        Relationships: []
-      }
       answers: {
         Row: {
           answer_text: string
@@ -175,7 +160,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string
-          email: string
+          email: string | null
           id: string
           is_admin: boolean
         }
@@ -183,7 +168,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name: string
-          email: string
+          email?: string | null
           id: string
           is_admin?: boolean
         }
@@ -191,7 +176,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string
-          email?: string
+          email?: string | null
           id?: string
           is_admin?: boolean
         }
@@ -285,6 +270,30 @@ export type Database = {
         }
         Relationships: []
       }
+      roster: {
+        Row: {
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       santa: {
         Row: {
           assigned_at: string
@@ -342,6 +351,7 @@ export type Database = {
         }[]
       }
       claim_membership: { Args: never; Returns: boolean }
+      claim_roster_name: { Args: { p_roster_id: string }; Returns: boolean }
       commit_draw: { Args: { p_pairs: Json }; Returns: undefined }
       insert_message: {
         Args: {
@@ -353,6 +363,14 @@ export type Database = {
         Returns: string
       }
       kringle_key: { Args: never; Returns: string }
+      list_roster: {
+        Args: never
+        Returns: {
+          claimed: boolean
+          id: string
+          name: string
+        }[]
+      }
       my_flavour: {
         Args: never
         Returns: {
@@ -383,7 +401,6 @@ export type Database = {
         Args: { p_direction: string; p_member_id: string; p_week_start: string }
         Returns: boolean
       }
-      sync_member: { Args: { p_user_id: string }; Returns: boolean }
       thread_for: {
         Args: { p_direction: string; p_member_id: string }
         Returns: string

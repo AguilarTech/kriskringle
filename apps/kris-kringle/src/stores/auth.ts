@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 
-type AuthStatus = 'loading' | 'signed-out' | 'member' | 'not-invited' | 'error' | 'unavailable'
+type AuthStatus = 'loading' | 'signed-out' | 'member' | 'choose-name' | 'error' | 'unavailable'
 export const useAuthStore = defineStore('auth', {
   state: () => ({ status: 'loading' as AuthStatus, email: '', userId: '', initialized: false, generation: 0 }),
   actions: {
@@ -15,12 +15,9 @@ export const useAuthStore = defineStore('auth', {
       if (!alreadyMember) this.status = 'loading'
       if (!supabase) { this.status = 'unavailable'; return }
       try {
-        const claim = await supabase.rpc('claim_membership')
+        const member = await supabase.rpc('claim_membership')
         if (generation !== this.generation) return
-        if (claim.error) { this.status = 'error'; return }
-        const member = await supabase.from('members').select('id').eq('id', session.user.id).maybeSingle()
-        if (generation !== this.generation) return
-        this.status = member.error ? 'error' : member.data ? 'member' : 'not-invited'
+        this.status = member.error ? 'error' : member.data ? 'member' : 'choose-name'
       } catch {
         if (generation === this.generation) this.status = 'error'
       }

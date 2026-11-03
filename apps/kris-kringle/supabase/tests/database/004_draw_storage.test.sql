@@ -6,12 +6,13 @@ delete from public.santa;
 delete from public.flavour_owner;
 delete from public.members;
 update public.app_state set phase = 'setup' where id = 1;
-insert into public.allowlist (email) values
-    ('draw.a@example.test'), ('draw.b@example.test'), ('draw.c@example.test');
 insert into auth.users (id, email, email_confirmed_at) values
     ('ad000000-0000-4000-8000-000000000001', 'draw.a@example.test', now()),
     ('ad000000-0000-4000-8000-000000000002', 'draw.b@example.test', now()),
     ('ad000000-0000-4000-8000-000000000003', 'draw.c@example.test', now());
+insert into public.members (id, email, display_name)
+select id, email, split_part(email, '@', 1) from auth.users
+where id in ('ad000000-0000-4000-8000-000000000001', 'ad000000-0000-4000-8000-000000000002', 'ad000000-0000-4000-8000-000000000003');
 insert into public.exclusions (member_id, excluded_id)
 values ('ad000000-0000-4000-8000-000000000001', 'ad000000-0000-4000-8000-000000000003');
 
