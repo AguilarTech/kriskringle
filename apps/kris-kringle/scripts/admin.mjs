@@ -6,7 +6,7 @@
 //   npm run admin -- reset           wipe all players, answers, the draw and chats
 //
 // .env (gitignored) needs, next to the app's existing VITE_SUPABASE_URL:
-//   SUPABASE_SERVICE_ROLE_KEY=<the service_role key>
+//   SUPABASE_SECRET_KEY=<the sb_secret_... key, Project Settings > API Keys>
 // Never prefix it with VITE_ or add it to Cloudflare's build variables:
 // anything named VITE_* is published inside the website.
 //
@@ -16,9 +16,9 @@ import { createInterface } from 'node:readline/promises'
 import { createClient } from '@supabase/supabase-js'
 
 const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL
-const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+const key = process.env.SUPABASE_SECRET_KEY
 if (!url || !key) {
-  console.error('Add SUPABASE_SERVICE_ROLE_KEY (and VITE_SUPABASE_URL) to .env (see scripts/admin.mjs).')
+  console.error('Add SUPABASE_SECRET_KEY (and VITE_SUPABASE_URL) to .env (see scripts/admin.mjs).')
   process.exit(1)
 }
 const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } })

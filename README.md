@@ -14,7 +14,7 @@ npm install
 npm run dev
 ```
 
-Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in a local `.env` file. Never give a private key (service-role key, OAuth secret) a `VITE_` name, put it in Cloudflare build variables, or commit it. The organiser script reads `SUPABASE_SERVICE_ROLE_KEY` from the same `.env` (see Organiser tools). Google sign-in requires a configured Google OAuth client and Supabase Auth provider.
+Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in a local `.env` file. Never give a private key (service-role key, OAuth secret) a `VITE_` name, put it in Cloudflare build variables, or commit it. The organiser script reads `SUPABASE_SECRET_KEY` from the same `.env` (see Organiser tools). Google sign-in requires a configured Google OAuth client and Supabase Auth provider.
 
 Useful commands: `npm run build`, `npm run typecheck`, and `npm run lint`. Run the local Supabase stack with `npx supabase start` and its database tests with `npx supabase test db`.
 
@@ -56,12 +56,12 @@ also removes their survey answers and exclusions) and the name becomes free.
 ## Organiser tools
 
 The draw is **not** automatic. `app_state.draw_at` only drives the countdown;
-the organiser runs the draw by hand. Add the project's legacy `service_role`
-key (Project Settings → API Keys) to the gitignored `apps/kris-kringle/.env`,
-next to the existing `VITE_SUPABASE_URL`:
+the organiser runs the draw by hand. Add the project's secret key
+(`sb_secret_…`, Project Settings → API Keys) to the gitignored
+`apps/kris-kringle/.env`, next to the existing `VITE_SUPABASE_URL`:
 
 ```sh
-SUPABASE_SERVICE_ROLE_KEY=<service_role key>
+SUPABASE_SECRET_KEY=<sb_secret_… key>
 ```
 
 Never prefix it with `VITE_` or add it to Cloudflare's build variables: any
