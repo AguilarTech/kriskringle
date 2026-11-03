@@ -10,10 +10,9 @@ const emit = defineEmits<{ signIn: [] }>()
     <p class="eyebrow">
       A family Christmas tradition
     </p>
-    <h1>Kris<br>Kringle <span>2026</span></h1>
-    <p class="tagline">
-      Double-blind. Zero spoilers. 100% paletas.
-    </p>
+    <h1 class="welcome-title">
+      Kris<br>Kringle <span>2026</span>
+    </h1>
     <AppButton
       :disabled="!available"
       @click="emit('signIn')"

@@ -11,3 +11,4 @@
 
 .unread-banner{display:block;width:min(100%,480px);min-height:48px;margin:20px auto 0;padding:12px 16px;border:2px solid var(--ink);border-radius:18px;background:var(--orange);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
 .choice--taken{opacity:.55;cursor:not-allowed}
+.welcome-title{margin-bottom:40px}
