@@ -1,10 +1,8 @@
 ﻿<script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watchEffect } from 'vue'
 import { supabase } from '../lib/supabase'
 import AppButton from '../components/AppButton.vue'
-import BottomNav from '../components/BottomNav.vue'
 import FlavourHome from './FlavourHome.vue'
-import FlavourSurvey from './FlavourSurvey.vue'
 import ChatView from './ChatView.vue'
 
 const props = defineProps<{ phase: string; userId: string }>()
@@ -13,14 +11,20 @@ type Flavour = { name: string; heroHex: string; inkHex: string; imageUrl: string
 const flavour = ref<Flavour | null>(null)
 const answers = ref<{ question: string; answer: string }[]>([])
 const status = ref<'loading' | 'ready' | 'error'>('loading')
-const page = ref<'home' | 'survey' | 'chats' | 'flavourChat' | 'santaChat' | 'missions'>('home')
+const page = ref<'home' | 'flavourChat' | 'santaChat'>('home')
 type Direction = 'to_flavour' | 'to_santa'
 type Message = { direction: string; created_at: string }
 const latestIncoming = ref<Record<Direction, number>>({ to_flavour: 0, to_santa: 0 })
 const lastRead = ref<Record<Direction, number>>({ to_flavour: 0, to_santa: 0 })
 const unreadFlavour = computed(() => latestIncoming.value.to_flavour > lastRead.value.to_flavour)
 const unreadSanta = computed(() => latestIncoming.value.to_santa > lastRead.value.to_santa)
-const hasUnread = computed(() => unreadFlavour.value || unreadSanta.value)
+// Show unread chats on the browser tab and the installed app icon too.
+watchEffect(() => {
+  const count = Number(unreadFlavour.value) + Number(unreadSanta.value)
+  document.title = count ? `(${count}) Kris Kringle` : 'Kris Kringle'
+  const nav = navigator as Navigator & { setAppBadge?: (n?: number) => Promise<void>; clearAppBadge?: () => Promise<void> }
+  void (count ? nav.setAppBadge?.(count) : nav.clearAppBadge?.())?.catch(() => {})
+})
 let refreshVersion = 0
 let refreshTimer: ReturnType<typeof setInterval> | undefined
 const storageKey = (direction: Direction) => `kringle:last-read:${props.userId}:${direction}`
@@ -61,9 +65,8 @@ async function load() {
     status.value = 'ready'
   } catch { status.value = 'error' }
 }
-function select(tab: 'home' | 'chats' | 'missions') { page.value = tab }
 onMounted(() => { readMarkers(); void load(); void refreshUnread(); document.addEventListener('visibilitychange', onVisibility); refreshTimer = setInterval(() => { void refreshUnread() }, 30000) })
-onUnmounted(() => { refreshVersion++; document.removeEventListener('visibilitychange', onVisibility); if (refreshTimer) clearInterval(refreshTimer) })
+onUnmounted(() => { refreshVersion++; document.title = 'Kris Kringle'; document.removeEventListener('visibilitychange', onVisibility); if (refreshTimer) clearInterval(refreshTimer) })
 </script>
 <template>
   <section
@@ -88,26 +91,15 @@ onUnmounted(() => { refreshVersion++; document.removeEventListener('visibilitych
     </button>
   </section>
   <template v-else-if="flavour">
-    <button
-      v-if="page === 'home' && hasUnread"
-      class="unread-banner"
-      type="button"
-      @click="page = 'chats'"
-    >
-      You have a new message. View chats
-    </button>
     <FlavourHome
       v-if="page === 'home'"
       :flavour="flavour"
       christmas-at="2026-12-24T13:00:00Z"
-      @survey="page = 'survey'"
+      :answers="answers"
+      :unread-flavour="unreadFlavour"
+      :unread-santa="unreadSanta"
       @flavour-chat="page = 'flavourChat'"
       @santa-chat="page = 'santaChat'"
-    />
-    <FlavourSurvey
-      v-else-if="page === 'survey'"
-      :answers="answers"
-      @back="page = 'home'"
     />
     <ChatView
       v-else-if="page === 'flavourChat' || page === 'santaChat'"
@@ -117,28 +109,9 @@ onUnmounted(() => { refreshVersion++; document.removeEventListener('visibilitych
       :hero-hex="flavour.heroHex"
       :ink-hex="flavour.inkHex"
       :closed="phase === 'closed'"
-      @back="page = 'chats'"
+      @back="page = 'home'"
       @read="markRead"
     />
-    <section
-      v-else-if="page === 'chats'"
-      class="flavour-home"
-    >
-      <h1>Chats</h1><AppButton @click="page = 'flavourChat'">
-        Chat with {{ flavour.name }}{{ unreadFlavour ? ' (new)' : '' }}
-      </AppButton><AppButton
-        variant="secondary"
-        @click="page = 'santaChat'"
-      >
-        Chat with Your Santa{{ unreadSanta ? ' (new)' : '' }}
-      </AppButton>
-    </section>
-    <section
-      v-else
-      class="flavour-home"
-    >
-      <h1>Missions</h1><p>Missions are coming soon.</p>
-    </section>
     <div
       v-if="page === 'home'"
       class="setup-signout post-signout"
@@ -151,10 +124,5 @@ onUnmounted(() => { refreshVersion++; document.removeEventListener('visibilitych
         Sign out
       </button>
     </div>
-    <BottomNav
-      :unread="hasUnread"
-      :active="page === 'missions' ? 'missions' : page === 'chats' || page === 'flavourChat' || page === 'santaChat' ? 'chats' : 'home'"
-      @select="select"
-    />
   </template>
 </template>

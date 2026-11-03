@@ -14,12 +14,15 @@ export interface SendDeps {
   quotaUsed(direction: Direction, weekStart: string): Promise<boolean>;
   /** Returns the reworded text, or throws. */
   reword(rawText: string): Promise<string>;
-  /** Calls insert_message(). Returns the new id, or "quota_used" on a unique-index clash. */
+  /**
+   * Calls insert_message(). Returns the new id, "quota_used" on a unique-index clash,
+   * or "nothing_to_reply_to" for a to_santa message when the Santa hasn't written last.
+   */
   insertMessage(
     direction: Direction,
     body: string,
     weekStart: string,
-  ): Promise<string | "quota_used">;
+  ): Promise<string | "quota_used" | "nothing_to_reply_to">;
   notify(messageId: string, direction: Direction): Promise<void>;
 }
 
@@ -54,6 +57,9 @@ export async function sendMessage(
 
   const id = await deps.insertMessage(direction, body, weekStart);
   if (id === "quota_used") throw new HttpError(429, QUOTA_USED);
+  if (id === "nothing_to_reply_to") {
+    throw new HttpError(409, "You can reply once your Santa sends you a message.");
+  }
 
   await deps.notify(id, direction);
   return { id, body };

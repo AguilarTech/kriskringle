@@ -2,8 +2,8 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import AppButton from '../components/AppButton.vue'
 
-const props = defineProps<{ flavour: { name: string; heroHex: string; inkHex: string; imageUrl?: string }; christmasAt: string }>()
-const emit = defineEmits<{ survey: []; flavourChat: []; santaChat: [] }>()
+const props = defineProps<{ flavour: { name: string; heroHex: string; inkHex: string; imageUrl?: string }; christmasAt: string; answers: { question: string; answer: string }[]; unreadFlavour?: boolean; unreadSanta?: boolean }>()
+const emit = defineEmits<{ flavourChat: []; santaChat: [] }>()
 const imageFailed = ref(false)
 const now = ref(Date.now())
 const days = computed(() => Math.max(0, Math.ceil((new Date(props.christmasAt).getTime() - now.value) / 86400000)))
@@ -14,6 +14,24 @@ onUnmounted(() => { if (timer) clearInterval(timer) })
 
 <template>
   <section class="flavour-home">
+    <button
+      v-if="unreadSanta"
+      class="message-alert"
+      type="button"
+      @click="emit('santaChat')"
+    >
+      <strong>New message!</strong>
+      <span>Your Santa sent you a message. Tap to read it.</span>
+    </button>
+    <button
+      v-if="unreadFlavour"
+      class="message-alert"
+      type="button"
+      @click="emit('flavourChat')"
+    >
+      <strong>New reply!</strong>
+      <span>{{ flavour.name }} replied. Tap to read it.</span>
+    </button>
     <p class="eyebrow">
       Your Kris Kringle
     </p>
@@ -41,25 +59,32 @@ onUnmounted(() => { if (timer) clearInterval(timer) })
       >
         <span />
       </div>
-      <button
-        class="flavour-link"
-        type="button"
-        @click="emit('survey')"
-      >
-        See their answers
-      </button>
     </div>
     <div class="christmas-countdown">
       <strong>{{ days }}</strong><span>{{ days === 1 ? 'day' : 'days' }} until Christmas</span>
     </div>
     <AppButton @click="emit('flavourChat')">
-      Chat with {{ flavour.name }}
+      Chat with {{ flavour.name }}{{ unreadFlavour ? ' (new)' : '' }}
     </AppButton>
     <AppButton
       variant="secondary"
       @click="emit('santaChat')"
     >
-      Chat with Your Santa
+      Chat with Your Santa{{ unreadSanta ? ' (new)' : '' }}
     </AppButton>
+    <h2 class="clues-heading">
+      Gift clues from {{ flavour.name }}
+    </h2>
+    <article
+      v-for="(item, index) in answers"
+      :key="index"
+      class="survey-answer"
+    >
+      <h3>{{ item.question }}</h3>
+      <p>{{ item.answer }}</p>
+    </article>
+    <p v-if="!answers.length">
+      No answers are available yet.
+    </p>
   </section>
 </template>

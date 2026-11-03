@@ -22,6 +22,8 @@ function melbourneWeek(value: Date) {
   return date.toISOString().slice(0, 10)
 }
 const quotaUsed = computed(() => serverQuota.value || messages.value.some(m => m.direction === props.direction && melbourneWeek(new Date(m.created_at)) === melbourneWeek(new Date())))
+// Recipients can only reply: the Santa has to have written last.
+const awaitingSanta = computed(() => props.direction === 'to_santa' && messages.value.at(-1)?.direction !== 'to_flavour')
 async function load() {
   if (!supabase) return
   loading.value = true; error.value = ''
@@ -37,13 +39,13 @@ async function load() {
   } catch { error.value = "Couldn't load this chat. Please try again." } finally { loading.value = false }
 }
 async function send() {
-  if (!supabase || sending.value || quotaUsed.value || props.closed || !text.value.trim()) return
+  if (!supabase || sending.value || quotaUsed.value || awaitingSanta.value || props.closed || !text.value.trim()) return
   sending.value = true; error.value = ''
   try {
     const result = await supabase.functions.invoke('send-message', { body: { direction: props.direction, raw_text: text.value.trim() } })
     if (result.error) {
       if (result.error instanceof FunctionsHttpError && result.error.context.status === 429) { serverQuota.value = true; error.value = 'Your weekly message has already been sent.'; return }
-      if (result.error instanceof FunctionsHttpError && result.error.context.status === 409) { error.value = 'Chat is now read-only.'; return }
+      if (result.error instanceof FunctionsHttpError && result.error.context.status === 409) { error.value = props.direction === 'to_santa' ? 'You can reply once your Santa sends you a message.' : 'Chat is now read-only.'; await load(); return }
       throw result.error
     }
     text.value = ''
@@ -113,13 +115,19 @@ onUnmounted(() => { mounted = false; document.removeEventListener('visibilitycha
       Chat is read-only.
     </p>
     <p
+      v-else-if="awaitingSanta && !loading"
+      class="quota-chip"
+    >
+      You can reply once your Santa sends you a message.
+    </p>
+    <p
       v-else
       class="quota-chip"
     >
       {{ quotaUsed ? 'Weekly message sent! Resets Monday.' : '1 message available this week. Resets Monday.' }}
     </p>
     <form
-      v-if="!closed"
+      v-if="!closed && !awaitingSanta"
       @submit.prevent="send"
     >
       <label for="chat-message">Your message</label>

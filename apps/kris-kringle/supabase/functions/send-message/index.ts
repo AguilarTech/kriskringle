@@ -32,6 +32,7 @@ Deno.serve(handler(async (req) => {
         p_week_start: weekStart,
       });
       if (error?.code === "23505") return "quota_used";
+      if (error?.message.includes("nothing to reply to")) return "nothing_to_reply_to";
       if (error) throw new Error("insert_message failed");
       return data as string;
     },

@@ -6,7 +6,13 @@ import { type Direction, type SendDeps, sendMessage } from "./flow.ts";
 const MONDAY_7_DEC = new Date("2026-12-06T13:00:00Z"); // Mon 7 Dec 00:00 Melbourne
 
 function fake(
-  opts: { phase?: Phase; quotaUsed?: boolean; rewordFails?: boolean; clash?: boolean } = {},
+  opts: {
+    phase?: Phase;
+    quotaUsed?: boolean;
+    rewordFails?: boolean;
+    clash?: boolean;
+    noReply?: boolean;
+  } = {},
 ) {
   const inserted: { direction: Direction; body: string; weekStart: string }[] = [];
   const notified: string[] = [];
@@ -17,6 +23,7 @@ function fake(
       opts.rewordFails ? Promise.reject(new Error("down")) : Promise.resolve(`reworded: ${raw}`),
     insertMessage: (direction, body, weekStart) => {
       if (opts.clash) return Promise.resolve("quota_used");
+      if (opts.noReply) return Promise.resolve("nothing_to_reply_to");
       inserted.push({ direction, body, weekStart });
       return Promise.resolve("msg-1");
     },
@@ -101,4 +108,13 @@ Deno.test("bad input: 400", async () => {
     await status(sendMessage(deps, { direction: "to_santa", raw_text: "x".repeat(1001) })),
     400,
   );
+});
+
+Deno.test("to_santa with no Santa message to reply to: 409, no push", async () => {
+  const { deps, notified } = fake({ noReply: true });
+  assertEquals(
+    await status(sendMessage(deps, { direction: "to_santa", raw_text: "hello" })),
+    409,
+  );
+  assertEquals(notified.length, 0);
 });

@@ -30,6 +30,7 @@ Body `{ "direction": "to_flavour" | "to_santa", "raw_text": "…" }` (max 1,000 
 | 200 | `{ "id", "body" }` where `body` is the reworded text that was saved | The sent bubble, with the reworded text |
 | 400 | Empty or too long | Inline validation |
 | 409 | Chat isn't open (phase isn't `drawn`) | Read-only notice |
+| 409 | `to_santa` only: the Santa hasn't written last, so there is nothing to reply to (recipients can't start the chat) | "You can reply once your Santa sends you a message." |
 | 429 | This week's message in this direction is already used | The quota chip: "Weekly message sent! Resets Monday" |
 | 502 | Rewording failed. Nothing saved, quota not used | "Couldn't send. Please try again." Keep the typed text in the box |
 
