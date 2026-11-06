@@ -5,6 +5,7 @@ import WelcomeView from './views/WelcomeView.vue'
 import ChooseNameView from './views/ChooseNameView.vue'
 import AppButton from './components/AppButton.vue'
 import SetupPage from './views/SetupPage.vue'
+import NotificationOptIn from './components/NotificationOptIn.vue'
 
 const auth = useAuthStore()
 onMounted(() => { void auth.initialize() })
@@ -12,6 +13,12 @@ onMounted(() => { void auth.initialize() })
 
 <template>
   <main class="app-shell">
+    <div
+      v-if="auth.status === 'member'"
+      class="app-tools"
+    >
+      <NotificationOptIn />
+    </div>
     <WelcomeView
       v-if="auth.status === 'signed-out' || auth.status === 'unavailable'"
       :available="auth.status === 'signed-out'"

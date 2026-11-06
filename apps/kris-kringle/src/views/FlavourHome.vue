@@ -1,7 +1,6 @@
 ﻿<script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import AppButton from '../components/AppButton.vue'
-import NotificationOptIn from '../components/NotificationOptIn.vue'
 
 const props = defineProps<{ flavour: { name: string; heroHex: string; inkHex: string; imageUrl?: string }; christmasAt: string; answers: { question: string; answer: string }[]; unreadFlavourCount: number; unreadSantaCount: number; santaChatStarted: boolean }>()
 const unreadTotal = computed(() => props.unreadFlavourCount + props.unreadSantaCount)
@@ -106,7 +105,6 @@ onUnmounted(() => { if (timer) clearInterval(timer) })
     >
       Your Santa will message you first. You can reply once they do.
     </p>
-    <NotificationOptIn />
     <h2 class="clues-heading">
       Gift clues from {{ flavour.name }}
     </h2>

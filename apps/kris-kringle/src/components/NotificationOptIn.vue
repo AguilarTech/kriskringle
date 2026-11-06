@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { supabase } from '../lib/supabase'
-import AppButton from './AppButton.vue'
 import { pushPublicKey } from '../lib/push-public-key'
 
 const publicKey = pushPublicKey
 const state = ref<'hidden' | 'available' | 'enabled' | 'blocked' | 'install' | 'saving' | 'error'>('hidden')
+const showHelp = ref(false)
+function activate() {
+  if (state.value === 'install' || state.value === 'blocked') showHelp.value = !showHelp.value
+  else void enable()
+}
 function applicationKey(value: string) {
   const base64 = value.replace(/-/g, '+').replace(/_/g, '/')
   return Uint8Array.from(atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')), char => char.charCodeAt(0))
@@ -32,7 +36,7 @@ async function enable() {
     })
     await saveSubscription(subscription)
     state.value = 'enabled'
-  } catch { state.value = 'error' }
+  } catch { state.value = 'error'; showHelp.value = true }
 }
 onMounted(async () => {
   if (!publicKey || !('serviceWorker' in navigator)) return
@@ -40,51 +44,71 @@ onMounted(async () => {
   if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !standalone) { state.value = 'install'; return }
   if (!('PushManager' in window) || !('Notification' in window)) return
   if (Notification.permission === 'denied') { state.value = 'blocked'; return }
-  state.value = 'available'
   if (Notification.permission === 'granted') {
     try {
       const registration = await navigator.serviceWorker.ready
       const subscription = await registration.pushManager.getSubscription()
-      if (subscription) { await saveSubscription(subscription); state.value = 'enabled' }
-    } catch { state.value = 'error' }
+      if (subscription) {
+        state.value = 'enabled'
+        await saveSubscription(subscription)
+        return
+      }
+    } catch {
+      // Keep an already enabled device out of the way; sync again next visit.
+      if (state.value === 'enabled') return
+    }
   }
+  state.value = 'available'
 })
 </script>
 
 <template>
   <section
-    v-if="state !== 'hidden'"
+    v-if="state !== 'hidden' && state !== 'enabled'"
     class="notification-opt-in"
     aria-label="Message notifications"
   >
-    <template v-if="state === 'enabled'">
-      <strong>Message notifications are on</strong>
-      <p>We'll notify this device when a new message arrives.</p>
-    </template>
-    <template v-else-if="state === 'install'">
-      <strong>Get message notifications on your iPhone</strong>
-      <p>In Safari, tap Share, then Add to Home Screen. Open the installed app to enable notifications.</p>
-    </template>
-    <template v-else-if="state === 'blocked'">
-      <strong>Notifications are blocked</strong>
-      <p>Allow notifications in your browser or device settings to get message alerts.</p>
-    </template>
-    <template v-else>
-      <strong>Don't miss a message</strong>
-      <p>Get a notification on this device, even when the app is closed.</p>
-      <AppButton
-        variant="dark"
-        :loading="state === 'saving'"
-        @click="enable"
+    <button
+      class="notification-toggle"
+      type="button"
+      :disabled="state === 'saving'"
+      :aria-label="state === 'blocked' ? 'Notification settings' : 'Enable notifications'"
+      :aria-expanded="state === 'install' || state === 'blocked' ? showHelp : undefined"
+      @click="activate"
+    >
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
       >
-        Enable notifications
-      </AppButton>
-      <p
-        v-if="state === 'error'"
-        role="alert"
-      >
-        Couldn't enable notifications. Please try again.
-      </p>
-    </template>
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
+      </svg>
+      {{ state === 'saving' ? 'Enabling…' : 'Notifications' }}
+    </button>
+    <p
+      v-if="showHelp && state === 'install'"
+      class="notification-hint"
+    >
+      Add to Home Screen in Safari, then enable notifications in the app.
+    </p>
+    <p
+      v-else-if="showHelp && state === 'blocked'"
+      class="notification-hint"
+    >
+      Allow notifications in your browser settings.
+    </p>
+    <p
+      v-else-if="showHelp && state === 'error'"
+      class="notification-hint"
+      role="alert"
+    >
+      Couldn't enable. Tap to retry.
+    </p>
   </section>
 </template>
