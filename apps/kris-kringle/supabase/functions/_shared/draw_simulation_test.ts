@@ -30,6 +30,11 @@ const FLAVOURS = [
   "blueberry",
   "mojito",
   "margarita",
+  "kiwifruit",
+  "horchata",
+  "screwdriver",
+  "kulfi",
+  "melon",
 ];
 
 const SEED = 20261205; // draw night

@@ -14,12 +14,12 @@
 //   probability proportional to the number of ways to complete the rest. Every valid
 //   draw is exactly equally likely, however dense the exclusions.
 //
-//   Cost: 2^n * n steps, about 100k for 13 members.
+//   Cost: 2^n * n steps, about 5M for 18 members.
 
 import { cryptoRandomInt, type RandomInt, shuffled } from "./random.ts";
 
 export const MIN_MEMBERS = 2;
-export const MAX_MEMBERS = 13; // there are 13 flavours
+export const MAX_MEMBERS = 18; // there are 18 flavours
 
 export interface DrawMember {
   id: string;
@@ -102,7 +102,7 @@ function popcount(x: number): number {
 /** ways[mask] for every mask (see header comment). */
 function countTable({ n, allowed }: Graph): Float64Array {
   const size = 1 << n;
-  const ways = new Float64Array(size); // at most 13! ≈ 6.2e9, exact in a double
+  const ways = new Float64Array(size); // at most 18! ≈ 6.4e15 < 2^53, exact in a double
   ways[0] = 1;
   for (let mask = 1; mask < size; mask++) {
     const santa = popcount(mask) - 1;

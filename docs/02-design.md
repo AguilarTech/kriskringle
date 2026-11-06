@@ -32,9 +32,9 @@ The design of the Kris Kringle PWA is inspired by the vibrant, cheerful aestheti
 | `color-orange` | `#FF7A1A` | Sun Orange | Alert chips, unread count pills, active badges |
 | `color-card-white` | `#FFFFFF` | Crisp White | Neutral chat bubbles, recipient views, modal surfaces |
 
-### 2.2 The 13 Paleta Flavour Swatches
+### 2.2 The 18 Paleta Flavour Swatches
 
-Each of the 13 flavours has a defined `hero_hex` and a paired `ink_hex` that satisfies WCAG AA contrast (≥ 4.5:1):
+Each of the 18 flavours has a defined `hero_hex` and a paired `ink_hex` that satisfies WCAG AA contrast (≥ 4.5:1):
 
 | Flavour Name | Hero Hex | Ink Hex | Contrast Ratio | Visual Notes |
 | :--- | :--- | :--- | :--- | :--- |
@@ -51,6 +51,11 @@ Each of the 13 flavours has a defined `hero_hex` and a paired `ink_hex` that sat
 | **Blueberry** | `#3949AB` | `#FFFFFF` | 6.8 : 1 | Deep indigo blue |
 | **Mojito** | `#43A047` | `#FFFFFF` | 4.6 : 1 | Fresh minty garden green |
 | **Margarita** | `#C0CA33` | `#1E1310` | 6.1 : 1 | Tangy yellow-lime agave tone |
+| **Kiwifruit** | `#6B8E23` | `#1E1310` | 4.8 : 1 | Olive kiwi green, brown skin band |
+| **Horchata** | `#D7B48F` | `#1E1310` | 9.4 : 1 | Cinnamon rice-milk cream |
+| **Screwdriver** | `#FFB300` | `#1E1310` | 10.1 : 1 | Golden orange-juice amber |
+| **Kulfi** | `#F2C14E` | `#1E1310` | 10.8 : 1 | Saffron cardamom cream |
+| **Melon** | `#AED581` | `#1E1310` | 10.9 : 1 | Pale honeydew green |
 
 ### 2.3 Typography
 
@@ -91,6 +96,11 @@ public/
     ├── blueberry.webp
     ├── mojito.webp
     ├── margarita.webp
+    ├── kiwifruit.webp
+    ├── horchata.webp
+    ├── screwdriver.webp
+    ├── kulfi.webp
+    ├── melon.webp
     └── generic-paleta.webp
 ```
 

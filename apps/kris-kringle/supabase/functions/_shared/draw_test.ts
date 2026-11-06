@@ -24,6 +24,11 @@ const FLAVOURS = [
   "blueberry",
   "mojito",
   "margarita",
+  "kiwifruit",
+  "horchata",
+  "screwdriver",
+  "kulfi",
+  "melon",
 ];
 
 function people(...names: string[]): DrawMember[] {
@@ -38,13 +43,13 @@ function ex(santa: string, ...excluded: string[]): Exclusion[] {
 
 Deno.test("refuses fewer than 2 members", () => {
   const r = solveDraw(people("Solo"), []);
-  assertEquals(r, { ok: false, conflict: { kind: "member_count", members: 1, min: 2, max: 13 } });
+  assertEquals(r, { ok: false, conflict: { kind: "member_count", members: 1, min: 2, max: 18 } });
 });
 
-Deno.test("refuses more than 13 members (only 13 flavours)", () => {
-  const many = people(..."ABCDEFGHIJKLMN".split(""));
+Deno.test("refuses more than 18 members (only 18 flavours)", () => {
+  const many = people(..."ABCDEFGHIJKLMNOPQRS".split(""));
   const r = solveDraw(many, []);
-  assert(!r.ok && r.conflict.kind === "member_count" && r.conflict.members === 14);
+  assert(!r.ok && r.conflict.kind === "member_count" && r.conflict.members === 19);
 });
 
 Deno.test("2 members swap", () => {
@@ -54,8 +59,8 @@ Deno.test("2 members swap", () => {
   assertValidDraw(m, [], r.pairs);
 });
 
-Deno.test("13 members with no exclusions succeeds", () => {
-  const m = people(..."ABCDEFGHIJKLM".split(""));
+Deno.test("18 members with no exclusions succeeds", () => {
+  const m = people(..."ABCDEFGHIJKLMNOPQR".split(""));
   const r = solveDraw(m, [], seededRandomInt(1));
   assert(r.ok);
   assertValidDraw(m, [], r.pairs);
@@ -64,7 +69,7 @@ Deno.test("13 members with no exclusions succeeds", () => {
 // --- Counting ---------------------------------------------------------------------
 
 Deno.test("counts derangements exactly with no exclusions", () => {
-  // !n: 1, 2, 9, 44, 265, ..., !13 = 2,290,792,932
+  // !n: 1, 2, 9, 44, 265, ..., !18 = 2,355,301,661,033,953
   const expected = [
     1,
     2,
@@ -78,9 +83,14 @@ Deno.test("counts derangements exactly with no exclusions", () => {
     14684570,
     176214841,
     2290792932,
+    32071101049,
+    481066515734,
+    7697064251745,
+    130850092279664,
+    2355301661033953,
   ];
-  for (let n = 2; n <= 13; n++) {
-    const m = people(..."ABCDEFGHIJKLM".slice(0, n).split(""));
+  for (let n = 2; n <= 18; n++) {
+    const m = people(..."ABCDEFGHIJKLMNOPQR".slice(0, n).split(""));
     assertEquals(countValidDraws(m, []), expected[n - 2], `!${n}`);
   }
 });
@@ -229,7 +239,7 @@ Deno.test("assignFlavours uses every flavour over many draws (random subset)", (
   for (let i = 0; i < 500; i++) {
     for (const p of assignFlavours(pairs, FLAVOURS)) seen.add(p.flavourId);
   }
-  assertEquals(seen.size, 13);
+  assertEquals(seen.size, 18);
 });
 
 Deno.test("assignFlavours rejects too few or duplicate flavours", () => {

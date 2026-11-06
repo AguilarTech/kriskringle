@@ -1,7 +1,7 @@
 // Randomness for the draw. Production uses the platform CSPRNG; tests inject a
 // seeded generator so failures are reproducible.
 //
-// The draw picks among up to 13! ≈ 6.2e9 weighted options, so generators must
+// The draw picks among up to 18! ≈ 6.4e15 weighted options, so generators must
 // support maxExclusive up to 2^53 (above 2^32).
 
 /** Returns an integer in [0, maxExclusive). maxExclusive is an integer in 1..2^53. */

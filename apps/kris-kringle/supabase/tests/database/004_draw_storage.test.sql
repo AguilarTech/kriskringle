@@ -28,7 +28,7 @@ insert into fixture_pairs values ('[
 ]');
 grant select on fixture_pairs to service_role, authenticated;
 
-select is((select count(*) from public.flavours), 13::bigint, '13 flavours are seeded');
+select is((select count(*) from public.flavours), 18::bigint, '18 flavours are seeded');
 select ok(has_function_privilege('service_role', 'public.commit_draw(jsonb)', 'EXECUTE'), 'service role can save draw');
 select ok(not has_function_privilege('authenticated', 'public.commit_draw(jsonb)', 'EXECUTE'), 'players cannot save draw');
 select ok(not has_function_privilege('anon', 'public.commit_draw(jsonb)', 'EXECUTE'), 'anon cannot save draw');
