@@ -98,6 +98,7 @@ onUnmounted(() => { refreshVersion++; document.title = 'Kris Kringle'; document.
       :answers="answers"
       :unread-flavour="unreadFlavour"
       :unread-santa="unreadSanta"
+      :santa-chat-started="latestIncoming.to_santa > 0"
       @flavour-chat="page = 'flavourChat'"
       @santa-chat="page = 'santaChat'"
     />
