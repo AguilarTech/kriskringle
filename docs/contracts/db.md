@@ -42,6 +42,25 @@ Add names, for example:
 insert into public.roster (name) values ('Abuela'), ('Tío Pepe');
 ```
 
+## Roster exclusions (6 Nov 2026)
+
+`20261106000000_roster_exclusions.sql` changes `exclusions.excluded_id` to
+reference `roster.id`, so choices can be saved before the excluded person
+signs in. Existing choices are backfilled through `roster.claimed_by`; the
+migration refuses a missing legacy roster mapping rather than dropping a choice.
+
+`list_exclusion_options()` returns `{ id: string, name: string }[]`, ordered
+by name, including unclaimed names and excluding the caller's own name.
+Only `authenticated` may execute it. It exposes no account mapping.
+The setup screen reads and writes roster IDs in `exclusions.excluded_id`.
+Existing own-row RLS and setup phase locks remain, and an insert/update trigger
+rejects the caller's own roster name.
+
+The draw adapter resolves each excluded roster name through `claimed_by`;
+unclaimed targets have no participating member yet. `commit_draw()` also joins
+the roster to reject any excluded pairing after a name is claimed. Resetting
+members still cascades to their exclusions as before.
+
 ## Sprint 0: membership (v1, superseded by the name roster)
 
 Implementation: `20261103000000_auth_membership.sql` and the incremental R1 fix

@@ -20,9 +20,15 @@ Deno.serve(handler(async (req) => {
       return data.map((m) => ({ id: m.id, name: m.display_name }));
     },
     exclusions: async () => {
-      const { data, error } = await db.from("exclusions").select("member_id, excluded_id");
+      const { data, error } = await db.from("exclusions")
+        .select("member_id, excluded:roster!exclusions_excluded_id_fkey(claimed_by)")
+        .returns<{ member_id: string; excluded: { claimed_by: string | null } | null }[]>();
       if (error) throw new Error("exclusions lookup failed");
-      return data.map((e) => ({ santaId: e.member_id, excludedId: e.excluded_id }));
+      // Choices follow roster names, including ones saved before the player signed up.
+      // Only claimed names participate in the draw, so resolve their current member IDs.
+      return data.flatMap((e) =>
+        e.excluded?.claimed_by ? [{ santaId: e.member_id, excludedId: e.excluded.claimed_by }] : []
+      );
     },
     flavourIds: async () => {
       const { data, error } = await db.from("flavours").select("id");

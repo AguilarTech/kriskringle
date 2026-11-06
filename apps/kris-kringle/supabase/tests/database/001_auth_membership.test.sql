@@ -38,7 +38,7 @@ select ok(not has_function_privilege('anon', 'public.claim_roster_name(uuid)', '
 select ok((select bool_and(p.prosecdef and 'search_path=public' = any(p.proconfig))
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public' and p.proname in
-        ('claim_membership', 'list_roster', 'claim_roster_name')),
+        ('claim_membership', 'list_roster', 'claim_roster_name', 'list_exclusion_options')),
     'all membership functions are security definer with pinned search_path');
 
 insert into public.roster (id, name) values

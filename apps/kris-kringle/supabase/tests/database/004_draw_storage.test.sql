@@ -13,6 +13,10 @@ insert into auth.users (id, email, email_confirmed_at) values
 insert into public.members (id, email, display_name)
 select id, email, split_part(email, '@', 1) from auth.users
 where id in ('ad000000-0000-4000-8000-000000000001', 'ad000000-0000-4000-8000-000000000002', 'ad000000-0000-4000-8000-000000000003');
+-- Roster IDs are deliberately the same as the old member fixtures here.
+insert into public.roster (id, name, claimed_by)
+select id, display_name, id from public.members
+where id::text like 'ad000000-%';
 insert into public.exclusions (member_id, excluded_id)
 values ('ad000000-0000-4000-8000-000000000001', 'ad000000-0000-4000-8000-000000000003');
 

@@ -34,6 +34,7 @@ select results_eq(
         and p.oid <> all(array[
             'public.claim_membership()'::regprocedure::oid,
             'public.list_roster()'::regprocedure::oid,
+            'public.list_exclusion_options()'::regprocedure::oid,
             'public.claim_roster_name(uuid)'::regprocedure::oid,
             'public.my_flavour()'::regprocedure::oid,
             'public.my_flavour_survey()'::regprocedure::oid,

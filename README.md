@@ -22,13 +22,13 @@ Useful commands: `npm run build`, `npm run typecheck`, and `npm run lint`. Run t
 
 Connect this repository to Workers Builds with these settings:
 
-| Setting | Value |
-| --- | --- |
-| Production branch | `main` |
-| Root directory | `apps/kris-kringle` |
-| Build command | `npm run build` |
-| Deploy command | `npx wrangler deploy` |
-| Preview command | `npx wrangler preview` |
+| Setting           | Value                  |
+| ----------------- | ---------------------- |
+| Production branch | `main`                 |
+| Root directory    | `apps/kris-kringle`    |
+| Build command     | `npm run build`        |
+| Deploy command    | `npx wrangler deploy`  |
+| Preview command   | `npx wrangler preview` |
 
 The app's `wrangler.jsonc` serves the built `dist` directory with single-page
 application routing. Set the dashboard Worker name to `kriskringle`, matching
@@ -47,7 +47,7 @@ Players sign in with Google and then pick their own name from a list; each name
 can be claimed once. Add the names in the Supabase SQL editor:
 
 ```sql
-insert into public.roster (name) values ('Abuela'), ('Tío Pepe');
+insert into public.roster (name) values ('Umpa Lumpa 1'), ('Umpa Lumpa 2'), ('Umpa Lumpa 3');
 ```
 
 If someone picks the wrong name, delete their row from `public.members` (this

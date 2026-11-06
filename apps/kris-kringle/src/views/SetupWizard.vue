@@ -70,7 +70,7 @@ onBeforeUnmount(() => { clearInterval(timer); clearTimeout(debounce) })
         :value="member.id"
       > {{ member.name }}</label>
       <p v-if="!members.length">
-        No other family members are available yet.
+        No other players are on the list yet.
       </p>
       <AppButton
         :loading="status === 'saving'"

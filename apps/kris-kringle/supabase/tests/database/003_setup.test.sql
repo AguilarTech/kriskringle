@@ -11,6 +11,10 @@ where id in ('ac000000-0000-4000-8000-000000000001', 'ac000000-0000-4000-8000-00
 update public.app_state set phase = 'setup' where id = 1;
 insert into public.answers (member_id, question_id, answer_text)
 values ('ac000000-0000-4000-8000-000000000002', 1, 'B private answer');
+-- Roster IDs are deliberately the same as the old member fixtures here.
+insert into public.roster (id, name, claimed_by)
+select id, display_name, id from public.members
+where id::text like 'ac000000-%';
 insert into public.exclusions (member_id, excluded_id)
 values ('ac000000-0000-4000-8000-000000000002', 'ac000000-0000-4000-8000-000000000001');
 
@@ -65,7 +69,7 @@ select results_eq($$update public.answers set answer_text = 'late' where member_
 select results_eq($$delete from public.exclusions where member_id = auth.uid() returning id$$,
     $$select null::uuid where false$$, 'exclusion deletes lock after draw');
 select throws_ok($$insert into public.exclusions (member_id, excluded_id)
-    values (auth.uid(), 'ac000000-0000-4000-8000-000000000001')$$,
+    values (auth.uid(), 'ac000000-0000-4000-8000-000000000002')$$,
     '42501', 'new row violates row-level security policy for table "exclusions"', 'exclusion inserts lock after draw');
 reset role;
 

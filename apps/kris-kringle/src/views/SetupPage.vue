@@ -24,7 +24,7 @@ async function load() {
   try {
     const [state, people, questionRows, exclusionRows, answerRows] = await Promise.all([
       supabase.from('app_state').select('phase, draw_at').eq('id', 1).single(),
-      supabase.from('members').select('id, display_name').neq('id', props.userId).order('display_name'),
+      supabase.rpc('list_exclusion_options'),
       supabase.from('questions').select('id, prompt').order('sort_order'),
       supabase.from('exclusions').select('excluded_id').eq('member_id', props.userId),
       supabase.from('answers').select('question_id, answer_text').eq('member_id', props.userId),
@@ -32,7 +32,7 @@ async function load() {
     if (state.error || !state.data.draw_at || people.error || questionRows.error || exclusionRows.error || answerRows.error) throw new Error('Setup load failed')
     phase.value = state.data.phase
     drawAt.value = state.data.draw_at
-    members.value = people.data.map(row => ({ id: row.id, name: row.display_name }))
+    members.value = people.data
     questions.value = questionRows.data.map(row => ({ id: String(row.id), text: row.prompt }))
     exclusions.value = exclusionRows.data.map(row => row.excluded_id)
     answers.value = Object.fromEntries(answerRows.data.map(row => [String(row.question_id), row.answer_text]))

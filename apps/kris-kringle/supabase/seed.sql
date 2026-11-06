@@ -2,9 +2,9 @@
 -- No passwords, Auth users or admin memberships are seeded here.
 insert into public.roster (name)
 values
-    ('Santa One'),
-    ('Santa Two'),
-    ('Santa Three')
+    ('Umpa Lumpa 1'),
+    ('Umpa Lumpa 2'),
+    ('Umpa Lumpa 3')
 on conflict do nothing;
 
 -- Local development key only. Production key creation is the organiser's task.

@@ -21,6 +21,11 @@ Called by the organiser, not by the app: `curl` with the service-role key (see `
 
 **Needs from Mises (G4):** tables `members`, `exclusions (member_id, excluded_id)`, `flavours (id)`, `app_state (phase)`, and the RPC `commit_draw(p_pairs jsonb)` from tech spec §5.7. Each pair is `{ "santa_id", "recipient_id", "flavour_id" }`. It raises an error containing `phase is not setup` when the draw already happened; `run-draw` turns that into 409.
 
+`exclusions.excluded_id` refers to a roster name (`roster.id`). The draw adapter
+resolves that name through `roster.claimed_by` to the current member ID. Choices
+made before someone signs up therefore apply when they claim the name. Unclaimed
+names do not participate in the draw.
+
 ## `send-message` (members): written, tested end to end with live rewording (R4)
 
 Body `{ "direction": "to_flavour" | "to_santa", "raw_text": "…" }` (max 1,000 characters).
