@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import AppButton from '../components/AppButton.vue'
+import NotificationOptIn from '../components/NotificationOptIn.vue'
 
 type Member = { id: string; name: string }
 type Question = { id: string; text: string }
@@ -117,6 +118,7 @@ onBeforeUnmount(() => { clearInterval(timer); clearTimeout(debounce) })
       >
         <strong>{{ days }}</strong> days <strong>{{ hours }}</strong> hours <strong>{{ minutes }}</strong> minutes
       </div>
+      <NotificationOptIn />
       <button
         class="text-button"
         type="button"

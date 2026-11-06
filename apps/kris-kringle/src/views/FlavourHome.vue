@@ -1,8 +1,10 @@
 ﻿<script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import AppButton from '../components/AppButton.vue'
+import NotificationOptIn from '../components/NotificationOptIn.vue'
 
-const props = defineProps<{ flavour: { name: string; heroHex: string; inkHex: string; imageUrl?: string }; christmasAt: string; answers: { question: string; answer: string }[]; unreadFlavour?: boolean; unreadSanta?: boolean; santaChatStarted: boolean }>()
+const props = defineProps<{ flavour: { name: string; heroHex: string; inkHex: string; imageUrl?: string }; christmasAt: string; answers: { question: string; answer: string }[]; unreadFlavourCount: number; unreadSantaCount: number; santaChatStarted: boolean }>()
+const unreadTotal = computed(() => props.unreadFlavourCount + props.unreadSantaCount)
 const emit = defineEmits<{ flavourChat: []; santaChat: [] }>()
 const imageFailed = ref(false)
 const now = ref(Date.now())
@@ -14,24 +16,35 @@ onUnmounted(() => { if (timer) clearInterval(timer) })
 
 <template>
   <section class="flavour-home">
-    <button
-      v-if="unreadSanta"
-      class="message-alert"
-      type="button"
-      @click="emit('santaChat')"
+    <section
+      v-if="unreadTotal"
+      class="inbox-notice"
+      aria-live="polite"
+      aria-label="Unread messages"
     >
-      <strong>New message!</strong>
-      <span>Your Santa sent you a message. Tap to read it.</span>
-    </button>
-    <button
-      v-if="unreadFlavour"
-      class="message-alert"
-      type="button"
-      @click="emit('flavourChat')"
-    >
-      <strong>New reply!</strong>
-      <span>{{ flavour.name }} replied. Tap to read it.</span>
-    </button>
+      <p class="inbox-notice-label">
+        New messages
+      </p>
+      <h2><span class="inbox-count">{{ unreadTotal }}</span> {{ unreadTotal === 1 ? 'message waiting' : 'messages waiting' }}</h2>
+      <button
+        v-if="unreadSantaCount"
+        type="button"
+        class="inbox-action"
+        @click="emit('santaChat')"
+      >
+        <strong>Your Santa sent you {{ unreadSantaCount === 1 ? 'a message' : `${unreadSantaCount} messages` }}</strong>
+        <span>Read now <span aria-hidden="true">&rarr;</span></span>
+      </button>
+      <button
+        v-if="unreadFlavourCount"
+        type="button"
+        class="inbox-action"
+        @click="emit('flavourChat')"
+      >
+        <strong>{{ flavour.name }} {{ unreadFlavourCount === 1 ? 'replied' : `sent ${unreadFlavourCount} replies` }}</strong>
+        <span>Read now <span aria-hidden="true">&rarr;</span></span>
+      </button>
+    </section>
     <p class="eyebrow">
       Your Kris Kringle
     </p>
@@ -63,16 +76,28 @@ onUnmounted(() => { if (timer) clearInterval(timer) })
     <div class="christmas-countdown">
       <strong>{{ days }}</strong><span>{{ days === 1 ? 'day' : 'days' }} until Christmas</span>
     </div>
-    <AppButton @click="emit('flavourChat')">
-      Chat with {{ flavour.name }}{{ unreadFlavour ? ' (new)' : '' }}
+    <AppButton
+      :class="{ 'button--unread': unreadFlavourCount > 0 }"
+      @click="emit('flavourChat')"
+    >
+      {{ unreadFlavourCount ? `Read reply from ${flavour.name}` : `Chat with ${flavour.name}` }}
+      <span
+        v-if="unreadFlavourCount"
+        class="unread-badge"
+      >{{ unreadFlavourCount }} NEW</span>
     </AppButton>
     <AppButton
       variant="secondary"
       :disabled="!santaChatStarted"
       :aria-describedby="!santaChatStarted ? 'santa-first-message' : undefined"
+      :class="{ 'button--unread': unreadSantaCount > 0 }"
       @click="emit('santaChat')"
     >
-      Reply to Your Santa{{ unreadSanta ? ' (new)' : '' }}
+      {{ unreadSantaCount ? 'Read message from Your Santa' : 'Reply to Your Santa' }}
+      <span
+        v-if="unreadSantaCount"
+        class="unread-badge"
+      >{{ unreadSantaCount }} NEW</span>
     </AppButton>
     <p
       v-if="!santaChatStarted"
@@ -81,6 +106,7 @@ onUnmounted(() => { if (timer) clearInterval(timer) })
     >
       Your Santa will message you first. You can reply once they do.
     </p>
+    <NotificationOptIn />
     <h2 class="clues-heading">
       Gift clues from {{ flavour.name }}
     </h2>

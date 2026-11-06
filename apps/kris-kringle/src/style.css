@@ -11,5 +11,14 @@
 
 
 .choice--taken{opacity:.55;cursor:not-allowed}
+.inbox-notice{padding:20px;border:3px solid var(--ink);border-radius:var(--radius-card);background:#C2185B;color:#fff;box-shadow:0 6px 0 var(--ink)}
+.inbox-notice-label{display:inline-block;margin:0 0 14px;padding:6px 12px;border-radius:8px;background:var(--lemon);color:var(--ink);font-size:.8rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.inbox-notice h2{display:flex;align-items:center;gap:12px;margin:0 0 18px;font:800 2rem/1.05 'Bricolage Grotesque',sans-serif}
+.inbox-count{display:grid;place-items:center;flex-shrink:0;min-width:58px;min-height:58px;padding:8px;border-radius:50%;background:#fff;color:#C2185B;font-size:2.4rem}
+.inbox-action{display:flex;flex-direction:column;gap:8px;width:100%;padding:16px;margin-top:12px;border:2px solid var(--ink);border-radius:16px;background:white;color:var(--ink);text-align:left;cursor:pointer}
+.inbox-action strong{font-size:1.1rem}.inbox-action>span{font-weight:800;text-decoration:underline;text-underline-offset:3px}.inbox-action:focus-visible{outline:3px solid var(--lemon);outline-offset:4px}
+.button--unread{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px;background:#C2185B;color:#fff;border:3px solid var(--ink);box-shadow:0 5px 0 var(--ink)}
+.unread-badge{display:inline-block;flex-shrink:0;padding:5px 9px;border-radius:8px;background:var(--lemon);color:var(--ink);font-size:.75rem;font-weight:800;letter-spacing:.04em}
+.notification-opt-in{padding:18px;border:2px solid var(--ink);border-radius:var(--radius-card);background:white}.notification-opt-in p{font-size:.9rem;line-height:1.5;margin:8px 0 12px}.notification-opt-in .button{width:100%}
 .welcome-title{margin-bottom:40px}
 .message-alert{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;min-height:56px;padding:18px 20px;border:3px solid var(--ink);border-radius:var(--radius-card);background:#C2185B;color:#fff;box-shadow:0 5px 0 var(--ink);text-align:left;font:inherit;font-weight:700;cursor:pointer;animation:alert-nudge 2.4s ease-in-out infinite}.message-alert strong{font:800 1.9rem/1 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em}.message-alert:active{transform:translateY(2px);box-shadow:0 3px 0 var(--ink)}@keyframes alert-nudge{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-1.5deg)}90%{transform:rotate(1.5deg)}95%{transform:rotate(-1deg)}}@media(prefers-reduced-motion:reduce){.message-alert{animation:none}}

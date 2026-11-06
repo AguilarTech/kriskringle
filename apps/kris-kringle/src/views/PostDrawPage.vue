@@ -11,16 +11,16 @@ type Flavour = { name: string; heroHex: string; inkHex: string; imageUrl: string
 const flavour = ref<Flavour | null>(null)
 const answers = ref<{ question: string; answer: string }[]>([])
 const status = ref<'loading' | 'ready' | 'error'>('loading')
-const page = ref<'home' | 'flavourChat' | 'santaChat'>('home')
+const page = ref<'home' | 'flavourChat' | 'santaChat'>(window.location.pathname === '/chats/santa' ? 'santaChat' : window.location.pathname === '/chats/flavour' ? 'flavourChat' : 'home')
 type Direction = 'to_flavour' | 'to_santa'
 type Message = { direction: string; created_at: string }
-const latestIncoming = ref<Record<Direction, number>>({ to_flavour: 0, to_santa: 0 })
+const incomingTimes = ref<Record<Direction, number[]>>({ to_flavour: [], to_santa: [] })
 const lastRead = ref<Record<Direction, number>>({ to_flavour: 0, to_santa: 0 })
-const unreadFlavour = computed(() => latestIncoming.value.to_flavour > lastRead.value.to_flavour)
-const unreadSanta = computed(() => latestIncoming.value.to_santa > lastRead.value.to_santa)
+const unreadFlavourCount = computed(() => incomingTimes.value.to_flavour.filter(time => time > lastRead.value.to_flavour).length)
+const unreadSantaCount = computed(() => incomingTimes.value.to_santa.filter(time => time > lastRead.value.to_santa).length)
 // Show unread chats on the browser tab and the installed app icon too.
 watchEffect(() => {
-  const count = Number(unreadFlavour.value) + Number(unreadSanta.value)
+  const count = unreadFlavourCount.value + unreadSantaCount.value
   document.title = count ? `(${count}) Kris Kringle` : 'Kris Kringle'
   const nav = navigator as Navigator & { setAppBadge?: (n?: number) => Promise<void>; clearAppBadge?: () => Promise<void> }
   void (count ? nav.setAppBadge?.(count) : nav.clearAppBadge?.())?.catch(() => {})
@@ -39,8 +39,8 @@ function markRead(direction: Direction, timestamp: string) {
   lastRead.value[direction] = Math.max(lastRead.value[direction], value)
   try { localStorage.setItem(storageKey(direction), String(lastRead.value[direction])) } catch { /* In-memory state still works. */ }
 }
-function latest(messages: Message[], outgoing: Direction) {
-  return messages.reduce((max, message) => message.direction === outgoing ? max : Math.max(max, Date.parse(message.created_at) || 0), 0)
+function incoming(messages: Message[], outgoing: Direction) {
+  return messages.filter(message => message.direction !== outgoing).map(message => Date.parse(message.created_at)).filter(Number.isFinite)
 }
 async function refreshUnread() {
   if (!supabase || document.visibilityState !== 'visible') return
@@ -48,8 +48,8 @@ async function refreshUnread() {
   try {
     const [flavourChat, santaChat] = await Promise.all([supabase.rpc('chat_with_flavour'), supabase.rpc('chat_with_santa')])
     if (version !== refreshVersion) return
-    if (!flavourChat.error) latestIncoming.value.to_flavour = latest(flavourChat.data, 'to_flavour')
-    if (!santaChat.error) latestIncoming.value.to_santa = latest(santaChat.data, 'to_santa')
+    if (!flavourChat.error) incomingTimes.value.to_flavour = incoming(flavourChat.data, 'to_flavour')
+    if (!santaChat.error) incomingTimes.value.to_santa = incoming(santaChat.data, 'to_santa')
   } catch { /* Keep the previous indicator until the next refresh. */ }
 }
 function onVisibility() { if (document.visibilityState === 'visible') void refreshUnread() }
@@ -65,7 +65,7 @@ async function load() {
     status.value = 'ready'
   } catch { status.value = 'error' }
 }
-onMounted(() => { readMarkers(); void load(); void refreshUnread(); document.addEventListener('visibilitychange', onVisibility); refreshTimer = setInterval(() => { void refreshUnread() }, 30000) })
+onMounted(() => { readMarkers(); void load(); void refreshUnread(); document.addEventListener('visibilitychange', onVisibility); refreshTimer = setInterval(() => { void refreshUnread() }, 10000) })
 onUnmounted(() => { refreshVersion++; document.title = 'Kris Kringle'; document.removeEventListener('visibilitychange', onVisibility); if (refreshTimer) clearInterval(refreshTimer) })
 </script>
 <template>
@@ -96,9 +96,9 @@ onUnmounted(() => { refreshVersion++; document.title = 'Kris Kringle'; document.
       :flavour="flavour"
       christmas-at="2026-12-11T13:00:00Z"
       :answers="answers"
-      :unread-flavour="unreadFlavour"
-      :unread-santa="unreadSanta"
-      :santa-chat-started="latestIncoming.to_santa > 0"
+      :unread-flavour-count="unreadFlavourCount"
+      :unread-santa-count="unreadSantaCount"
+      :santa-chat-started="incomingTimes.to_santa.length > 0"
       @flavour-chat="page = 'flavourChat'"
       @santa-chat="page = 'santaChat'"
     />
