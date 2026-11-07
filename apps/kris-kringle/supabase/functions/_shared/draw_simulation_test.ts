@@ -6,13 +6,7 @@
 // otherwise buy for, except their hidden recipient.
 
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import {
-  assignFlavours,
-  countValidDraws,
-  type DrawMember,
-  type Exclusion,
-  solveDraw,
-} from "./draw.ts";
+import { assignFlavours, type DrawMember, type Exclusion, solveDraw } from "./draw.ts";
 import { seededRandomInt, shuffled } from "./random.ts";
 import { assertValidDraw } from "./test_helpers.ts";
 
@@ -35,6 +29,13 @@ const FLAVOURS = [
   "screwdriver",
   "kulfi",
   "melon",
+  "grape",
+  "cherry",
+  "guava",
+  "blackberry",
+  "cucumber",
+  "taro",
+  "bubblegum",
 ];
 
 const SEED = 20261205; // draw night
@@ -66,7 +67,6 @@ Deno.test(`simulation: ${RUNS} dense draws, 10–13 members (seed ${SEED})`, () 
     }
     densest = Math.max(densest, exclusions.length / (n * (n - 1)));
 
-    assert(countValidDraws(members, exclusions) >= 1, `run ${run}: web must be solvable`);
     const result = solveDraw(members, exclusions, rand);
     assert(result.ok, `run ${run}: expected a valid draw`);
     assertValidDraw(members, exclusions, result.pairs);
@@ -80,4 +80,36 @@ Deno.test(`simulation: ${RUNS} dense draws, 10–13 members (seed ${SEED})`, () 
   }
 
   assert(densest > 0.75, `webs should get dense; densest was ${(densest * 100).toFixed(0)}%`);
+});
+
+// Family-sized webs at the top of the range: 22-25 members, each excluding up to
+// 8 people (partners, households), always around a hidden valid draw.
+Deno.test(`simulation: ${RUNS} family draws, 22–25 members (seed ${SEED})`, () => {
+  const rand = seededRandomInt(SEED + 1);
+  for (let run = 0; run < RUNS; run++) {
+    const n = 22 + rand(4);
+    const members: DrawMember[] = Array.from(
+      { length: n },
+      (_, i) => ({ id: `m${i}`, name: `Member ${i}` }),
+    );
+    const order = shuffled(members, rand);
+    const hidden = new Map(order.map((m, i) => [m.id, order[(i + 1) % n].id]));
+    const exclusions: Exclusion[] = [];
+    for (const s of members) {
+      const others = shuffled(
+        members.filter((r) => r.id !== s.id && r.id !== hidden.get(s.id)),
+        rand,
+      );
+      for (const r of others.slice(0, rand(9))) {
+        exclusions.push({ santaId: s.id, excludedId: r.id });
+      }
+    }
+    const result = solveDraw(members, exclusions, rand);
+    assert(result.ok, `run ${run}: expected a valid draw`);
+    assertValidDraw(members, exclusions, result.pairs);
+    assertEquals(
+      new Set(assignFlavours(result.pairs, FLAVOURS, rand).map((p) => p.flavourId)).size,
+      n,
+    );
+  }
 });

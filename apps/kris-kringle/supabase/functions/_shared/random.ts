@@ -1,8 +1,8 @@
 // Randomness for the draw. Production uses the platform CSPRNG; tests inject a
 // seeded generator so failures are reproducible.
 //
-// The draw picks among up to 18! ≈ 6.4e15 weighted options, so generators must
-// support maxExclusive up to 2^53 (above 2^32).
+// The draw itself only needs small values (at most 25), but generators support
+// maxExclusive up to 2^53 so they stay general.
 
 /** Returns an integer in [0, maxExclusive). maxExclusive is an integer in 1..2^53. */
 export type RandomInt = (maxExclusive: number) => number;

@@ -32,9 +32,9 @@ The design of the Kris Kringle PWA is inspired by the vibrant, cheerful aestheti
 | `color-orange` | `#FF7A1A` | Sun Orange | Alert chips, unread count pills, active badges |
 | `color-card-white` | `#FFFFFF` | Crisp White | Neutral chat bubbles, recipient views, modal surfaces |
 
-### 2.2 The 18 Paleta Flavour Swatches
+### 2.2 The 25 Paleta Flavour Swatches
 
-Each of the 18 flavours has a defined `hero_hex` and a paired `ink_hex` that satisfies WCAG AA contrast (≥ 4.5:1):
+Each of the 25 flavours has a defined `hero_hex` and a paired `ink_hex` that satisfies WCAG AA contrast (≥ 4.5:1):
 
 | Flavour Name | Hero Hex | Ink Hex | Contrast Ratio | Visual Notes |
 | :--- | :--- | :--- | :--- | :--- |
@@ -56,6 +56,13 @@ Each of the 18 flavours has a defined `hero_hex` and a paired `ink_hex` that sat
 | **Screwdriver** | `#FFB300` | `#1E1310` | 10.1 : 1 | Golden orange-juice amber |
 | **Kulfi** | `#F2C14E` | `#1E1310` | 10.8 : 1 | Saffron cardamom cream |
 | **Melon** | `#AED581` | `#1E1310` | 10.9 : 1 | Pale honeydew green |
+| **Grape** | `#6A1B9A` | `#FFFFFF` | 9.4 : 1 | Deep grape purple |
+| **Cherry** | `#8E0E2B` | `#FFFFFF` | 9.3 : 1 | Dark cherry red |
+| **Guava** | `#F48FB1` | `#1E1310` | 8.1 : 1 | Soft pink guava flesh |
+| **Blackberry** | `#2E1A47` | `#FFFFFF` | 15.5 : 1 | Near-black berry violet |
+| **Cucumber** | `#26A69A` | `#1E1310` | 6.1 : 1 | Cool cucumber teal |
+| **Taro** | `#B39DDB` | `#1E1310` | 7.6 : 1 | Pale taro lavender |
+| **Bubblegum** | `#4FC3F7` | `#1E1310` | 9.1 : 1 | Sky-blue bubblegum |
 
 ### 2.3 Typography
 
@@ -101,6 +108,13 @@ public/
     ├── screwdriver.webp
     ├── kulfi.webp
     ├── melon.webp
+    ├── grape.webp
+    ├── cherry.webp
+    ├── guava.webp
+    ├── blackberry.webp
+    ├── cucumber.webp
+    ├── taro.webp
+    ├── bubblegum.webp
     └── generic-paleta.webp
 ```
 

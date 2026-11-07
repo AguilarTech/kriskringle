@@ -38,7 +38,9 @@ export async function runDraw(
   const solved = solveDraw(members, exclusions, randomInt);
   if (!solved.ok) {
     const message = solved.conflict.kind === "member_count"
-      ? "The draw needs between 2 and 18 members"
+      ? "The draw needs between 2 and 25 members"
+      : solved.conflict.kind === "too_tight"
+      ? "The exclusions are too tight for a fair draw; remove a few and try again"
       : "No valid draw with the current exclusions";
     throw new HttpError(422, message, solved.conflict);
   }

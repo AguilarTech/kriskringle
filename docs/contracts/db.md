@@ -228,7 +228,7 @@ or workflow is needed. Zero exclusions is valid.
 ### G4: draw storage
 
 `flavours(id text, name text, hero_hex text, ink_hex text, sort_order int)`
-contains the 18 design-spec flavours and is readable by authenticated users.
+contains the 25 design-spec flavours and is readable by authenticated users.
 `santa(santa_id uuid, flavour_id text, assigned_at timestamptz)` lets a Santa
 read only their shopping assignment. No client can read `flavour_owner`, which
 stores `flavour_id text`, `encrypted_member_id bytea`, `assigned_at timestamptz`.
@@ -244,7 +244,7 @@ commit_draw({ p_pairs: [
 ```
 
 The server checks admin authorization before invoking the RPC. The database
-locks `app_state`, requires `setup`, validates a complete derangement of 2–18
+locks `app_state`, requires `setup`, validates a complete derangement of 2–25
 members respecting exclusions and unique existing flavours, encrypts each
 recipient with `kringle_encryption_key` from Vault, inserts both assignment
 tables, and changes phase to `drawn` in one transaction. A rejected save changes

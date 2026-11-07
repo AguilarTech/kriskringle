@@ -17,3 +17,23 @@ export function assertValidDraw(members: DrawMember[], exclusions: Exclusion[], 
     assert(!banned.has(`${p.santaId}>${p.recipientId}`), "excluded pair");
   }
 }
+
+/** Counts valid draws by trying every permutation. Tests only, small groups. */
+export function countValidDraws(members: DrawMember[], exclusions: Exclusion[]): number {
+  const banned = new Set(exclusions.map((e) => `${e.santaId}>${e.excludedId}`));
+  const used = new Set<string>();
+  const count = (i: number): number => {
+    if (i === members.length) return 1;
+    let total = 0;
+    for (const r of members) {
+      if (used.has(r.id) || r.id === members[i].id || banned.has(`${members[i].id}>${r.id}`)) {
+        continue;
+      }
+      used.add(r.id);
+      total += count(i + 1);
+      used.delete(r.id);
+    }
+    return total;
+  };
+  return count(0);
+}

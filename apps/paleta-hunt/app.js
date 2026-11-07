@@ -1,6 +1,6 @@
 const app = document.querySelector('#app')
 const config = window.huntConfig
-const flavours = ['blueberry', 'chocolate', 'hibiscus', 'lemon', 'lime', 'mandarin', 'mango', 'margarita', 'mojito', 'orange', 'raspberry', 'strawberry', 'watermelon', 'kiwifruit', 'horchata', 'screwdriver', 'kulfi', 'melon']
+const flavours = ['blueberry', 'chocolate', 'hibiscus', 'lemon', 'lime', 'mandarin', 'mango', 'margarita', 'mojito', 'orange', 'raspberry', 'strawberry', 'watermelon', 'kiwifruit', 'horchata', 'screwdriver', 'kulfi', 'melon', 'grape', 'cherry', 'guava', 'blackberry', 'cucumber', 'taro', 'bubblegum']
 let step = 0
 let flavour = 'mango'
 let stream

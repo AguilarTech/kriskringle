@@ -106,7 +106,7 @@ create table public.answers (
     constraint unique_member_question unique (member_id, question_id)
 );
 
--- 7. The Paleta Flavours (18)
+-- 7. The Paleta Flavours (25)
 create table public.flavours (
     id text primary key, -- e.g. 'hibiscus', 'margarita'
     name text not null,
@@ -722,12 +722,12 @@ General rules for all three functions:
 - **Prerequisites:** `app_state.phase = 'setup'`, otherwise HTTP 409.
 - **Input:** `{ "dry_run"?: boolean }`.
 - **Algorithm:**
-  1. Load members $M$ and exclusions $E$ with the service-role client. If $|M| < 2$ or $|M| > 18$ (there are 18 flavours), return HTTP 422.
+  1. Load members $M$ and exclusions $E$ with the service-role client. If $|M| < 2$ or $|M| > 25$ (there are 25 flavours), return HTTP 422.
   2. For each Santa $S$, build the allowed recipients as a bitmask: every member except $S$ and except anyone $S$ excluded. A valid draw is an assignment $S \to R$ that uses every member once as Santa and once as recipient, with:
      - $S \neq R$ (no self-matches).
      - $(S, R) \notin E$ (no excluded pairings).
-  3. Count the valid draws exactly with a bitmask table: `ways[mask]` is the number of ways to give the first `popcount(mask)` Santas exactly the recipients in `mask` (about 2^18 × 18 ≈ 5M steps). If `ways[full]` is 0, no valid draw exists, and that answer is definite. Otherwise, sample one draw by assigning recipients from the last Santa back to the first, choosing each recipient with probability proportional to the number of ways to complete the rest. **Every valid draw is exactly equally likely**, however dense the exclusions. Randomness comes from `crypto.getRandomValues`. Implemented in `supabase/functions/_shared/draw.ts`.
-  4. If no valid draw exists, return HTTP 422 with diagnostics (Hall's theorem). With at most 18 members, every subset can be checked. Find the smallest group of Santas whose combined allowed recipients number fewer than the group, and the smallest group of recipients whose combined possible Santas number fewer than the group. Return the smaller of the two by display name, for example `{ "kind": "santas", "santas": ["Carlos", "Maria"], "canOnlyBuyFor": ["Sofia"] }` or `{ "kind": "recipients", "recipients": ["Diego"], "canOnlyBeBoughtForBy": [] }`.
+  3. Check a valid draw exists with a maximum bipartite matching (augmenting paths). That answer is definite. Then sample one draw exactly uniformly by rejection: Santas go in a fixed order, most constrained first, and Santa $i$ draws a ticket in $[0, U_i)$ with $U_i = \min(|\text{allowed}_i|, n - i)$. A ticket below the number of still-open allowed recipients picks that recipient; otherwise the attempt restarts. Every complete draw has probability $\prod 1/U_i$, so **every valid draw is exactly equally likely**. With no exclusions about 38% of attempts succeed; family-sized exclusion webs need at most thousands. After 2M failed attempts (only possible when most people exclude most others) it returns HTTP 422 with `{ "kind": "too_tight" }`. (The earlier exact-count table needed 2^n doubles and its counts exceed 2^53 above 18 members, so it could not reach 25.) Randomness comes from `crypto.getRandomValues`. Implemented in `supabase/functions/_shared/draw.ts`.
+  4. If no valid draw exists, return HTTP 422 with diagnostics (Hall's theorem). The unmatched side of the maximum matching gives a clashing group (König), which is then shrunk while it still clashes. This is done for the Santas whose combined allowed recipients number fewer than the group, and for the recipients whose combined possible Santas number fewer than the group. Return the smaller of the two by display name, for example `{ "kind": "santas", "santas": ["Carlos", "Maria"], "canOnlyBuyFor": ["Sofia"] }` or `{ "kind": "recipients", "recipients": ["Diego"], "canOnlyBeBoughtForBy": [] }`.
   5. If `dry_run`, return `{ "solvable": true, "members": n }` without writing anything. The assignment is never returned.
   6. Pick a random subset of $n$ flavours, shuffle it, and give each recipient one flavour.
   7. Call `commit_draw(pairs)`. It re-validates the pairs, encrypts the recipient ids, writes `flavour_owner` and `santa`, and sets phase to `drawn`, all in one transaction. If it raises, nothing is written and phase stays `setup`.

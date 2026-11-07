@@ -6,20 +6,27 @@
 //   themselves and anyone they excluded. A valid draw is a perfect matching in
 //   that bipartite graph.
 //
-//   ways[mask] = the number of ways to give Santas 0..k-1 (k = popcount(mask)) exactly
-//   the recipients in mask. ways[full] is the total number of valid draws. Zero
-//   means no valid draw exists: a definite answer, not a search timeout.
+//   1. Is a draw possible? A maximum matching (augmenting paths) answers that
+//      exactly. If not, Hall's theorem gives the group of members that clashes.
 //
-//   A draw is then sampled from Santa n-1 down to 0, choosing each recipient with
-//   probability proportional to the number of ways to complete the rest. Every valid
-//   draw is exactly equally likely, however dense the exclusions.
+//   2. Sampling, exactly uniform. Santas go in a fixed order, most constrained
+//      first. Santa i draws a ticket in [0, U_i), where U_i = min(|allowed[i]|,
+//      n - i) is a fixed upper bound on how many recipients can still be open to
+//      them. If the ticket is below the number actually open, it picks that
+//      recipient; otherwise the attempt is thrown away and starts again. Every
+//      complete draw comes out with probability 1/U_0 * 1/U_1 * ..., the same for
+//      every valid draw, so every valid draw is exactly equally likely.
 //
-//   Cost: 2^n * n steps, about 5M for 18 members.
+//   With no exclusions about 38% of attempts succeed, and a family web (a few
+//   exclusions each) needs at most thousands of attempts, microseconds each. Only
+//   a web where many people exclude most of the group could run out of attempts;
+//   that is reported as "too_tight" so the organiser can loosen it.
 
 import { cryptoRandomInt, type RandomInt, shuffled } from "./random.ts";
 
 export const MIN_MEMBERS = 2;
-export const MAX_MEMBERS = 18; // there are 18 flavours
+export const MAX_MEMBERS = 25; // there are 25 flavours
+const MAX_ATTEMPTS = 2_000_000;
 
 export interface DrawMember {
   id: string;
@@ -56,6 +63,10 @@ export type DrawConflict =
     kind: "recipients";
     recipients: string[];
     canOnlyBeBoughtForBy: string[];
+  }
+  | {
+    /** A draw exists, but so few that the fair random pick ran out of attempts. */
+    kind: "too_tight";
   };
 
 export type SolveResult =
@@ -99,33 +110,87 @@ function popcount(x: number): number {
   return c;
 }
 
-/** ways[mask] for every mask (see header comment). */
-function countTable({ n, allowed }: Graph): Float64Array {
-  const size = 1 << n;
-  const ways = new Float64Array(size); // at most 18! ≈ 6.4e15 < 2^53, exact in a double
-  ways[0] = 1;
-  for (let mask = 1; mask < size; mask++) {
-    const santa = popcount(mask) - 1;
-    let options = mask & allowed[santa];
-    let total = 0;
-    while (options) {
-      const bit = options & -options;
-      total += ways[mask ^ bit];
-      options ^= bit;
-    }
-    ways[mask] = total;
+const bitIndex = (bit: number) => 31 - Math.clz32(bit);
+
+/** The same graph seen from the other side: out[r] = everyone with r as a neighbour. */
+function transpose(n: number, neighbours: readonly number[]): number[] {
+  const out = new Array<number>(n).fill(0);
+  for (let s = 0; s < n; s++) {
+    for (let r = 0; r < n; r++) if (neighbours[s] & (1 << r)) out[r] |= 1 << s;
   }
-  return ways;
+  return out;
 }
 
-/** Number of valid draws (0 means impossible). Exposed for tests and dry runs. */
-export function countValidDraws(
-  members: readonly DrawMember[],
-  exclusions: readonly Exclusion[],
-): number {
-  if (members.length < MIN_MEMBERS || members.length > MAX_MEMBERS) return 0;
-  const graph = buildGraph(members, exclusions);
-  return countTable(graph)[(1 << graph.n) - 1];
+function reachOf(n: number, neighbours: readonly number[], group: number): number {
+  let reach = 0;
+  for (let i = 0; i < n; i++) if (group & (1 << i)) reach |= neighbours[i];
+  return reach;
+}
+
+/**
+ * Maximum matching by augmenting paths. Returns null if every left vertex can be
+ * matched, otherwise a Hall violation: a group of left vertices whose combined
+ * neighbours (reach) are fewer than the group.
+ */
+function hallViolation(
+  n: number,
+  neighbours: readonly number[],
+): { group: number; reach: number } | null {
+  const matchOf = new Array<number>(n).fill(-1); // matchOf[right] = left
+  let seen = 0;
+  const augment = (left: number): boolean => {
+    let options = neighbours[left] & ~seen;
+    while (options) {
+      const bit = options & -options;
+      options ^= bit;
+      seen |= bit;
+      const right = bitIndex(bit);
+      if (matchOf[right] === -1 || augment(matchOf[right])) {
+        matchOf[right] = left;
+        return true;
+      }
+    }
+    return false;
+  };
+
+  for (let left = 0; left < n; left++) {
+    seen = 0;
+    if (augment(left)) continue;
+    // König: everyone reachable from this unmatched vertex along alternating paths
+    // forms a group with exactly one fewer neighbour than members.
+    let group = 1 << left;
+    let reach = 0;
+    const queue = [left];
+    while (queue.length) {
+      let options = neighbours[queue.pop()!] & ~reach;
+      reach |= options;
+      while (options) {
+        const bit = options & -options;
+        options ^= bit;
+        const next = matchOf[bitIndex(bit)];
+        if (!(group & (1 << next))) {
+          group |= 1 << next;
+          queue.push(next);
+        }
+      }
+    }
+    // Drop members while the group still clashes, so the organiser sees a small one.
+    for (let changed = true; changed;) {
+      changed = false;
+      for (let i = 0; i < n; i++) {
+        const smaller = group & ~(1 << i);
+        if (
+          smaller !== group && smaller &&
+          popcount(reachOf(n, neighbours, smaller)) < popcount(smaller)
+        ) {
+          group = smaller;
+          changed = true;
+        }
+      }
+    }
+    return { group, reach: reachOf(n, neighbours, group) };
+  }
+  return null;
 }
 
 /** Pairs every member as a Santa with a different recipient, uniformly at random among valid draws. */
@@ -143,88 +208,59 @@ export function solveDraw(
   }
 
   const graph = buildGraph(members, exclusions);
-  const ways = countTable(graph);
-  let mask = (1 << n) - 1;
-  if (ways[mask] === 0) {
-    return { ok: false, conflict: findConflict(members, graph) };
-  }
+  const conflict = findConflict(members, graph);
+  if (conflict) return { ok: false, conflict };
 
+  // Fixed order, most constrained Santa first; bound[i] = min(choices, n - i).
+  const choices = graph.allowed.map(popcount);
+  const order = [...Array(n).keys()].sort((a, b) => choices[a] - choices[b] || a - b);
+  const bound = order.map((s, i) => Math.min(choices[s], n - i));
   const recipientOf = new Array<number>(n);
-  for (let santa = n - 1; santa >= 0; santa--) {
-    // ways[mask] = sum over allowed r in mask of ways[mask without r]; pick r by that weight.
-    let ticket = randomInt(ways[mask]);
-    let options = mask & graph.allowed[santa];
-    let chosen = -1;
-    while (options) {
-      const bit = options & -options;
-      const weight = ways[mask ^ bit];
-      if (ticket < weight) {
-        chosen = bit;
-        break;
-      }
-      ticket -= weight;
-      options ^= bit;
-    }
-    if (chosen === -1) throw new Error("draw sampling invariant broken");
-    recipientOf[santa] = 31 - Math.clz32(chosen);
-    mask ^= chosen;
-  }
 
-  return {
-    ok: true,
-    pairs: members.map((m, s) => ({ santaId: m.id, recipientId: members[recipientOf[s]].id })),
-  };
+  attempts: for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    let open = (1 << n) - 1;
+    for (let i = 0; i < n; i++) {
+      const santa = order[i];
+      let options = graph.allowed[santa] & open;
+      let ticket = randomInt(bound[i]);
+      if (ticket >= popcount(options)) continue attempts;
+      while (ticket--) options &= options - 1; // skip `ticket` open recipients
+      const chosen = options & -options;
+      recipientOf[santa] = bitIndex(chosen);
+      open ^= chosen;
+    }
+    return {
+      ok: true,
+      pairs: members.map((m, s) => ({ santaId: m.id, recipientId: members[recipientOf[s]].id })),
+    };
+  }
+  return { ok: false, conflict: { kind: "too_tight" } };
 }
 
 /**
  * Explains an impossible draw using Hall's theorem: a draw exists exactly when every
  * group of Santas may, between them, buy for at least as many people as are in the
- * group (and the same from the recipients' side). Returns the smallest violating
- * group from either side, which is what the organiser has to fix.
+ * group (and the same from the recipients' side). Returns the smaller clashing group
+ * from either side, which is what the organiser has to fix, or null if a draw exists.
  */
-function findConflict(members: readonly DrawMember[], { n, allowed }: Graph): DrawConflict {
-  const allowedBy = new Array<number>(n).fill(0); // allowedBy[r]: Santas who may buy for r
-  for (let s = 0; s < n; s++) {
-    for (let r = 0; r < n; r++) if (allowed[s] & (1 << r)) allowedBy[r] |= 1 << s;
-  }
-
-  const smallestViolation = (neighbours: number[]): { group: number; reach: number } | null => {
-    let best: { group: number; reach: number } | null = null;
-    let bestSize = Infinity;
-    for (let group = 1; group < 1 << n; group++) {
-      const size = popcount(group);
-      if (size >= bestSize) continue;
-      let reach = 0;
-      for (let i = 0; i < n; i++) if (group & (1 << i)) reach |= neighbours[i];
-      if (popcount(reach) < size) {
-        best = { group, reach };
-        bestSize = size;
-      }
-    }
-    return best;
-  };
+function findConflict(members: readonly DrawMember[], { n, allowed }: Graph): DrawConflict | null {
+  const santaSide = hallViolation(n, allowed);
+  if (!santaSide) return null;
+  const recipientSide = hallViolation(n, transpose(n, allowed));
 
   const names = (mask: number) => members.filter((_, i) => mask & (1 << i)).map((m) => m.name);
-
-  const santaSide = smallestViolation(allowed);
-  const recipientSide = smallestViolation(allowedBy);
-
-  if (santaSide && (!recipientSide || popcount(santaSide.group) <= popcount(recipientSide.group))) {
+  if (!recipientSide || popcount(santaSide.group) <= popcount(recipientSide.group)) {
     return {
       kind: "santas",
       santas: names(santaSide.group),
       canOnlyBuyFor: names(santaSide.reach),
     };
   }
-  if (recipientSide) {
-    return {
-      kind: "recipients",
-      recipients: names(recipientSide.group),
-      canOnlyBeBoughtForBy: names(recipientSide.reach),
-    };
-  }
-  // Unreachable: Hall's theorem guarantees a violation when no perfect matching exists.
-  throw new Error("no valid draw but no Hall violation found");
+  return {
+    kind: "recipients",
+    recipients: names(recipientSide.group),
+    canOnlyBeBoughtForBy: names(recipientSide.reach),
+  };
 }
 
 /** Gives each recipient a distinct flavour, chosen at random from the available flavours. */

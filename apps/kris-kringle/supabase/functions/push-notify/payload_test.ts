@@ -20,6 +20,13 @@ const FLAVOUR_NAMES = [
   "screwdriver",
   "kulfi",
   "melon",
+  "grape",
+  "cherry",
+  "guava",
+  "blackberry",
+  "cucumber",
+  "taro",
+  "bubblegum",
 ];
 
 Deno.test("message notifications never name a flavour", () => {
